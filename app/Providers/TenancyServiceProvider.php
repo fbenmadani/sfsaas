@@ -12,6 +12,8 @@ use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
 use Stancl\Tenancy\Listeners;
 use Stancl\Tenancy\Middleware;
+use Stancl\Tenancy\Middleware\InitializeTenancyBySubDomain;
+use Livewire\Livewire;
 
 class TenancyServiceProvider extends ServiceProvider
 {
@@ -103,6 +105,13 @@ class TenancyServiceProvider extends ServiceProvider
         $this->mapRoutes();
 
         $this->makeTenancyMiddlewareHighestPriority();
+
+        Livewire::setUpdateRoute(function ($handle) {
+            return Route::post('/livewire/update', $handle)
+            ->middleware('web',
+            'universal',
+            InitializeTenancyBySubDomain::class);
+        });
     }
 
     protected function bootEvents()
