@@ -30,5 +30,6 @@ Clone the repository
   php artisan db:seed
 
  Run the development server
+  php artisan serve --host sfsaas.test --port 8000
   
   
