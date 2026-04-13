@@ -1,4 +1,7 @@
 /.phpunit.cache
+/.agents
+/.gemini
+/artifacts
 /node_modules
 /public/build
 /public/hot
