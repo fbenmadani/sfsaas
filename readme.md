@@ -1,12 +1,14 @@
 
 
 <p align="center">
-![](https://img.shields.io/badge/PHP-8.3-informational?style=flat&logo=php&color=4f5b93)
-![](https://img.shields.io/badge/Laravel-13-informational?style=flat&logo=laravel&color=4f5b93)
-![](https://img.shields.io/badge/Livewire-4-informational?style=flat&logo=livewire&color=4f5b93)
-![](https://img.shields.io/badge/MySQL-8.0-informational?style=flat&logo=mysql&color=4f5b93)
-![](https://img.shields.io/badge/Tailwind-4-informational?style=flat&logo=tailwind&color=4f5b93)
+<img src="https://img.shields.io/badge/PHP-8.3-informational?style=flat&logo=php&color=4f5b93" alt="Php Version">
+<img src="https://img.shields.io/badge/Laravel-13-informational?style=flat&logo=laravel&color=4f5b93" alt="Laravel Version">
+<img src="https://img.shields.io/badge/Livewire-4-informational?style=flat&logo=livewire&color=4f5b93" alt="Livewire Version">
+<img src="https://img.shields.io/badge/MySQL-8.0-informational?style=flat&logo=mysql&color=4f5b93" alt="MySQL Version">
+<img src="https://img.shields.io/badge/Tailwind-4-informational?style=flat&logo=tailwind&color=4f5b93" alt="Tailwind Version">
 
+
+ 
 <a href="https://packagist.org/packages/fbenmadani/sfsaas"><img src="https://poser.pugx.org/fbenmadani/sfsaas/d/total.svg" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/fbenmadani/sfsaas"><img src="https://poser.pugx.org/fbenmadani/sfsaas/v/stable.svg" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/fbenmadani/sfsaas"><img src="https://poser.pugx.org/fbenmadani/sfsaas/license.svg" alt="License"></a>
