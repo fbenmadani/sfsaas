@@ -1,40 +1,56 @@
 ## Goal
-Implement the core multi-tenant database infrastructure, central SaaS billing models, and the primary actions for tenant registration and limits as outlined geographically in `Software-Requirement-Specification.md` and `2026-03-31-saas-management-design.md`.
+Create a premium landing page (Home), Features, Pricing, and About pages for sfSaas using Flux UI and Tailwind CSS 4.
 
 ## Assumptions
-- The application uses Laravel 11.x, PHP 8.3, Pest, and the TALL stack (Livewire 4 / Flux UI).
-- Tenancy architecture uses a multi-database approach: Mysql for the global central database, and Mysql for isolated tenant databases (FR-1).
-- We are implementing a custom schema for Plans, Pricing, and Subscriptions rather than heavily opinionated packages, to achieve granular control over feature tracking (`limit_value`).
-- A multi-database tenancy package (e.g., `stancl/tenancy`) may be utilized or a custom database connection switcher will be built. This plan establishes the foundational model schema first.
+- Using Flux UI Free components.
+- Using Tailwind CSS 4 (Vite plugin).
+- Application uses `stancl/tenancy` for domain-based routing (central routes).
+- Pages should be visually stunning, responsive, and follow SEO best practices.
 
 ## Plan
-1. **Configure Multi-Database Connections**
-   - Files: `config/database.php`, `.env.example`
-   - Change: Define a `central` connection (pgsql) and a dynamically configurable `tenant` connection (mysql). Set up the required environment variables.
-   - Verify: Run `php artisan config:show database.connections.central` and `php artisan config:show database.connections.tenant`.
-2. **Core Central Models & SaaS Billing Schema (Phase 1)**
-   - Files: `database/migrations/xxxx_create_plans_prices_features_tables.php`, `app/Models/Plan.php`, `app/Models/Price.php`, `app/Models/Feature.php`
-   - Change: Create the "Catalog" schema (Plans, Prices, Features) and the `feature_plan` pivot table within the central database migration path.
-   - Verify: Run `php artisan migrate --database=central` and executing Pest model verification tests.
-3. **Tenant & Subscription Schema (Phase 1)**
-   - Files: `database/migrations/xxxx_create_tenants_and_subscriptions_tables.php`, `app/Models/Tenant.php`, `app/Models/Subscription.php`
-   - Change: Create the `tenants` table (tracking the subdomain) and `subscriptions` table (tracking the `price_id` and status) in the central DB.
-   - Verify: Execute `php artisan migrate --database=central` and verify relations with `tests/Unit/TenantSchemaTest.php`.
-4. **Tenant Registration Action (Phase 2)**
-   - Files: `app/Actions/Tenant/RegisterTenantAction.php`, `app/Jobs/ProvisionTenantDatabase.php`
-   - Change: Implement the action to create a Tenant, attach a standard Subscription, and dispatch a job to provision their MySQL database (FR-1) and subdomain resolving logic (FR-2).
-   - Verify: Write test `tests/Feature/RegisterTenantActionTest.php` and execute `vendor/bin/pest`.
-5. **Tenant Usage Limits & Sync (Phase 2)**
-   - Files: `app/Services/Billing/UsageLimitService.php`
-   - Change: Implement a service to verify a tenant's current usage against their plan's limits directly and sync data between the Tenant and Central DB (FR-3).
-   - Verify: Write test `tests/Feature/UsageLimitServiceTest.php` and execute `vendor/bin/pest`.
+
+### 1. Create Marketing Layout
+- **Files**: `resources/views/layouts/marketing.blade.php`
+- **Change**: Define a base layout with a premium Flux-based navbar (using `flux:navbar`, `flux:brand`, `flux:button`) and a comprehensive footer.
+- **Verify**: Create a temporary route to view the empty layout.
+
+### 2. Define Marketing Routes
+- **Files**: `routes/web.php`
+- **Change**: Register routes for `/` (home), `/features`, `/pricing`, and `/about` within the central domain group.
+- **Verify**: Run `php artisan route:list` to ensure routes are correctly mapped to views.
+
+### 3. Implement Home Page
+- **Files**: `resources/views/marketing/home.blade.php`
+- **Change**: Implement a high-impact Hero section with a generated illustration, a summary of Sales/Marketing/Service features, and a clear CTA.
+- **Verify**: Navigate to root URL and check for "wow" factor and responsiveness.
+
+### 4. Implement Features Page
+- **Files**: `resources/views/marketing/features.blade.php`
+- **Change**: Detailed breakdown of the three core modules (Sales, Marketing, Customer Service) using Flux cards and icons.
+- **Verify**: Navigate to `/features` and ensure clear value proposition.
+
+### 5. Implement Pricing Page
+- **Files**: `resources/views/marketing/pricing.blade.php`
+- **Change**: Create a multi-tier pricing table (e.g., Starter, Pro, Enterprise) using Flux's clean aesthetic and interactive buttons.
+- **Verify**: Navigate to `/pricing` and check layout on mobile.
+
+### 6. Implement About Page
+- **Files**: `resources/views/marketing/about.blade.php`
+- **Change**: Design an "About Us" page detailing the mission to help SMBs, following the same premium design system.
+- **Verify**: Navigate to `/about`.
+
+### 7. Automated Testing & Verification
+- **Files**: `tests/Feature/MarketingPagesTest.php`
+- **Change**: Write Pest tests to assert that all four pages return a 200 OK status.
+- **Verify**: Run `php artisan test --filter MarketingPagesTest`.
 
 ## Risks & mitigations
-- **Multi-database Testing Complexity:** Running tests against Postgres and MySQL concurrently can be fragile in CI locally.
-  - *Mitigation:* Configure Pest to utilize `sqlite` in-memory for both `central` and `tenant` schemas during the initial test suite phase, explicitly verifying raw schema creation separately.
-- **Provisioning Failures (FR-1):** Database creation logic might throw exceptions, leaving orphaned records or half-booted tenants.
-  - *Mitigation:* Ensure `RegisterTenantAction` utilizes strict database transactions internally, and the initial DB provisioning job has clearly defined retry policies.
+- **Risk**: Flux UI Pro components might be accidentally used.
+- **Mitigation**: Strictly use components listed in the Free edition documentation.
+- **Risk**: Tailwind 4 breaking changes or config issues.
+- **Mitigation**: Verify compilation with `npm run build` early.
 
 ## Rollback plan
-- Wipe external schemas: `php artisan db:wipe --database=central`
-- Revert code structure: `git reset --hard HEAD` and `git clean -fd` to sweep out all auto-generated classes and migrations.
+- Revert `routes/web.php` to its previous state.
+- Delete the created layout and marketing view directory.
+- `git checkout routes/web.php` and `rm -rf resources/views/marketing resources/views/layouts/marketing.blade.php`.
