@@ -2,12 +2,23 @@
 
 use Livewire\Component;
 
+use App\Models\User;
+
 new class extends Component
 {
     //
+
+    public $users;
+
+    public function mount(){
+        $this->users = User::all();
+    }
 };
 ?>
 
 <div>
-    {{-- Life is available only in the present moment. - Thich Nhat Hanh --}}
+    List All  Users
+    @foreach ($users as $user)
+        <p>{{ $user->name }}</p>
+    @endforeach
 </div>
