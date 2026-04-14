@@ -33,7 +33,9 @@ it('lists all users in the index', function () {
     actingAs($admin)
         ->get('http://sfsaas.test/admin/users')
         ->assertStatus(200)
-        ->assertSee($users[0]->name)
-        ->assertSee($users[1]->name)
-        ->assertSee($users[2]->name);
+        ->assertSee($users[0]->name, false)
+        ->assertSee($users[1]->name, false)
+        ->assertSee($users[2]->name, false);
+       
+
 });
