@@ -1,8 +1,9 @@
 <?php
 
 use App\Models\User;
-use function Pest\Laravel\get;
+
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
 
 it('cannot be accessed by guests', function () {
     get('http://sfsaas.test/admin/users')
@@ -36,6 +37,5 @@ it('lists all users in the index', function () {
         ->assertSee($users[0]->name, false)
         ->assertSee($users[1]->name, false)
         ->assertSee($users[2]->name, false);
-       
 
 });

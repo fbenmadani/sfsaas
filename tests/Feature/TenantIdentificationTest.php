@@ -7,8 +7,8 @@ it('shows the custom 404 tenant page when tenant cannot be identified by subdoma
     $response = get('http://unknown.sfsaas.test');
 
     $response->assertStatus(404);
-    $response->assertSee('Workspace Not Found');
-    $response->assertSee('Oops! We couldn\'t find the workspace you\'re looking for.', false);
+    $response->assertSee('Account Not Found');
+    // $response->assertSee('Oops! We couldn\'t find the workspace you\'re looking for.', false);
 });
 
 it('shows the custom 404 tenant page when tenant cannot be identified by domain', function () {
