@@ -6,7 +6,7 @@
             <div class="basis-1/2 mx-auto max-w-2xl flex-shrink-0 lg:mx-0 lg:max-w-xl lg:pt-8">
                 <flux:badge class="mb-6 bg-brand-accent/20 text-brand-secondary border-brand-accent/30 font-semibold">New: AI-Powered Insights</flux:badge>
                 <flux:heading level="1" class="text-4xl font-bold tracking-tight text-zinc-900 sm:text-6xl">
-                    Grow your business with <span class="text-brand-secondary">sfSaas</span>.
+                    Grow your business with <span class="text-brand-secondary"> {{ config('app.name') }} </span>.
                 </flux:heading>
                 <flux:text class="mt-6 text-zinc-600 leading-8">
                     Simple, friendly, and innovative tools for SMBs to manage Sales, Marketing, and Customer Service in one delightful platform.
