@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tenant Not Found</title>
+    <title>Account Not Found</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -23,7 +23,7 @@
             </h2>
             
             <p class="mt-4 text-gray-600 dark:text-zinc-400">
-                Oops! We couldn't find the workspace you're looking for. The domain you are trying to access doesn't exist or has been disabled.
+                Oops! We couldn't find the account  you're looking for. The domain you are trying to access doesn't exist or has been disabled.
             </p>
         </div>
 
