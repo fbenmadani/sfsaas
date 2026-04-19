@@ -15,12 +15,14 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @fluxAppearance
+        
+        @livewireStyles
     </head>
     <body class="min-h-screen bg-white font-sans antialiased text-zinc-900">
         <header class="bg-white border-b border-zinc-100">
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
                 <flux:navbar class="flex-1 py-4">
-                    <flux:brand href="/" name="sfSaas" class="text-brand-secondary" />
+                    <flux:brand href="/" name="{{ config('app.name', 'SPEED FORGE') }} " class="text-brand-secondary" />
 
                     <flux:spacer />
 
@@ -32,7 +34,7 @@
                     <flux:separator vertical variant="subtle" class="mx-2" />
 
                     <flux:button href="/login" variant="ghost" size="sm">Log in</flux:button>
-                    <flux:button href="/register" variant="primary" size="sm" class="bg-brand-secondary">Get Started</flux:button>
+                    <flux:button href="/sign-up" variant="primary" size="sm" class="bg-brand-secondary">Get Started</flux:button>
                 </flux:navbar>
             </div>
         </header>
@@ -44,14 +46,15 @@
         <footer class="bg-zinc-50 border-t border-zinc-100 py-12">
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
                 <div class="flex flex-col items-center justify-between gap-6 sm:flex-row">
-                    <flux:brand href="/" name="sfSaas" class="text-brand-secondary" />
+                    <flux:brand href="/" name="{{ config('app.name', 'SPEED FORGE') }}" class="text-brand-secondary" />
                     <p class="text-sm text-zinc-500">
-                        &copy; {{ date('Y') }} sfSaas. All rights reserved.
+                        &copy; {{ date('Y') }} {{ config('app.name', 'SPEED FORGE') }} . All rights reserved.
                     </p>
                 </div>
             </div>
         </footer>
 
         @fluxScripts
+        @livewireScripts
     </body>
 </html>
