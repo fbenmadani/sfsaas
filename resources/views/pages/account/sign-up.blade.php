@@ -12,7 +12,7 @@ new #[Layout('components.layouts.marketing')] class extends Component
 {
     //
 
-    public $name = 'demo';
+    public $name = '';
     public $account_name = '';
     public $subdomain = '';
     public $email = '';
