@@ -72,7 +72,8 @@ new #[Layout('components.layouts.marketing')] class extends Component
             'subdomain' => $this->subdomain,
             'owner_id' => $user->id,
         ]);
-        //$user->account_id = $account->id;
+        $user->tenant_id = $tenant->id;
+        
         $user->save();
         $tenant->domains()->create([
             'domain' => $this->subdomain,
