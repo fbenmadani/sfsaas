@@ -5,7 +5,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-afterEach(function() {
+afterEach(function () {
     Tenant::all()->each->delete();
 });
 

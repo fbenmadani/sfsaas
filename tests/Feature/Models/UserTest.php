@@ -5,7 +5,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
-afterEach(function() {
+afterEach(function () {
     Tenant::all()->each->delete();
 });
 
@@ -23,7 +23,7 @@ it('calculates the correct initials', function () {
 it('belongs to a tenant', function () {
     $tenantId = Str::random(10);
     $tenant = Tenant::create(['id' => $tenantId]);
-    
+
     $user = User::factory()->create(['tenant_id' => $tenant->id]);
 
     expect($user->tenant())->toBeInstanceOf(BelongsTo::class)
