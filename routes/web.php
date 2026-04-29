@@ -17,6 +17,7 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::middleware('admin')->group(function () {
                 // Route::get('admin/users', function () { return 'Users'; })->name('admin.users.index');
                 Route::livewire('admin/users', 'admin.users.index')->name('admin.users.index');
+                Route::livewire('admin/tenants', 'admin.tenants.index')->name('admin.tenants.index');
                 // Route::view('admin', 'admin')->name('admin.users.index');
             });
         });
