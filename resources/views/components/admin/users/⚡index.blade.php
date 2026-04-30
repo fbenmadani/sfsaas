@@ -30,7 +30,7 @@ new class extends Component
     public function users(){
         return User::query()
             ->tap(fn ($query) => $this->sortBy ? $query->orderBy($this->sortBy, $this->sortDirection) : $query)
-            ->paginate(2);
+            ->paginate(15);
     }
 
    
