@@ -30,6 +30,7 @@ Homestead.json
 .phpactor.json
 auth.json
 =======
+.worktrees/
 /.phpunit.cache
 /.agents
 /.gemini
