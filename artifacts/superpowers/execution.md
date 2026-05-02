@@ -47,3 +47,22 @@ Executing plan to create sfSaas marketing pages.
 - All marketing pages (Home, Features, Pricing, About) successfully render with 200 OK.
 - Flux UI components are correctly integrated within a shared marketing layout.
 - Responsive design verified via tests and component structure.
+* **Step 1: Create Models Test Files**
+  * Files: 	ests/Feature/Models/TenantTest.php, 	ests/Feature/Models/UserTest.php`n  * What changed:
+    * Generated pest feature test files for Tenant and User models.
+  * Verification command: php artisan make:test Models/TenantTest --pest ; php artisan make:test Models/UserTest --pest`n  * Result: pass
+
+* **Step 2: Implement Tenant Model Tests**
+  * Files: 	ests/Feature/Models/TenantTest.php`n  * What changed:
+    * Implemented test to verify Tenant creation.
+    * Implemented test to verify Tenant to User relationship.
+    * Added teardown hook to delete created tenant databases.
+  * Verification command: ./vendor/bin/pest tests/Feature/Models/TenantTest.php`n  * Result: pass
+
+* **Step 3: Implement User Model Tests**
+  * Files: 	ests/Feature/Models/UserTest.php`n  * What changed:
+    * Implemented test to verify initials() method.
+    * Implemented test to verify User to Tenant relationship.
+    * Implemented test to verify model casts for is_admin and 	enant_id.
+  * Verification command: php artisan test --compact tests/Feature/Models/UserTest.php`n  * Result: pass
+
