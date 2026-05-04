@@ -20,7 +20,11 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::livewire('admin/users', 'admin.users.index')->name('admin.users.index');
                 Route::livewire('admin/tenants', 'admin.tenants.index')->name('admin.tenants.index');
                 Route::get('admin/features', Index::class)->name('admin.features.index');
+                // New route for creating features using string literal
+                // Route::get('admin/features/create', 'App\Livewire\Admin\Features\Create')->name('admin.features.create');
                 Route::get('admin/plans', App\Livewire\Admin\Plans\Index::class)->name('admin.plans.index');
+                // N route for creating plans using string literal
+                //  Route::get('admin/plans/create', 'App\Livewire\Admin\Plans\Create')->name('admin.plans.create');
                 Route::get('admin/plans/{plan}/edit', Edit::class)->name('admin.plans.edit');
             });
         });
