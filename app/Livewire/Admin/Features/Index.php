@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Features;
 
 use App\Models\Feature;
+use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,28 +12,38 @@ class Index extends Component
     use WithPagination;
 
     public string $name = '';
+
     public string $slug = '';
+
     public string $type = 'boolean'; // 'boolean' or 'limit'
+
     public ?Feature $editingFeature = null;
 
-    public $sortBy = 'name';
-    public $sortDirection = 'asc';
+    public string $sortBy = 'name';
 
-    protected $listeners = [
-        'featureCreated' => '$refresh',
-        'featureUpdated' => '$refresh',
-        'featureDeleted' => '$refresh',
-    ];
+    public string $sortDirection = 'asc';
 
+    /**
+     * Get the validation rules for the component.
+     *
+     * @return array<string, mixed>
+     */
     protected function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'slug' => ['required', 'string', 'unique:features,slug,' . ($this->editingFeature ? $this->editingFeature->id : 'NULL')],
-            'type' => 'required|in:boolean,limit',
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => [
+                'required',
+                'string',
+                'unique:features,slug,'.($this->editingFeature?->id ?? 'NULL'),
+            ],
+            'type' => ['required', 'in:boolean,limit'],
         ];
     }
 
+    /**
+     * Sort the features by the given column.
+     */
     public function sort(string $column): void
     {
         if ($this->sortBy === $column) {
@@ -43,29 +54,26 @@ class Index extends Component
         }
     }
 
+    /**
+     * Save the feature to the database.
+     */
     public function save(): void
     {
-        $this->validate();
+        $data = $this->validate();
 
         if ($this->editingFeature) {
-            $this->editingFeature->update([
-                'name' => $this->name,
-                'slug' => $this->slug,
-                'type' => $this->type,
-            ]);
-            $this->dispatch('featureUpdated');
+            $this->editingFeature->update($data);
         } else {
-            Feature::create([
-                'name' => $this->name,
-                'slug' => $this->slug,
-                'type' => $this->type,
-            ]);
-            $this->dispatch('featureCreated');
+            Feature::create($data);
         }
 
         $this->resetForm();
+        $this->dispatch('feature-saved');
     }
 
+    /**
+     * Load the feature for editing.
+     */
     public function edit(Feature $feature): void
     {
         $this->editingFeature = $feature;
@@ -74,25 +82,38 @@ class Index extends Component
         $this->type = $feature->type;
     }
 
+    /**
+     * Delete the feature from the database.
+     */
     public function delete(Feature $feature): void
     {
         $feature->delete();
-        $this->dispatch('featureDeleted');
-        $this->resetForm();
+
+        if ($this->editingFeature?->is($feature)) {
+            $this->resetForm();
+        }
+
+        $this->dispatch('feature-deleted');
     }
 
+    /**
+     * Reset the form and pagination.
+     */
     public function resetForm(): void
     {
         $this->reset(['name', 'slug', 'type', 'editingFeature']);
-        $this->resetPage(); // Reset pagination when form is reset
+        $this->resetPage();
     }
 
-    public function render()
+    /**
+     * Render the component.
+     */
+    public function render(): View
     {
         $features = Feature::orderBy($this->sortBy, $this->sortDirection)->paginate(10);
 
         return view('livewire.admin.features.index', [
             'features' => $features,
-        ]);
+        ])->layout('layouts.app');
     }
 }

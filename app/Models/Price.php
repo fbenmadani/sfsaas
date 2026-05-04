@@ -11,7 +11,7 @@ class Price extends Model
     /** @use HasFactory<PriceFactory> */
     use HasFactory;
 
-    protected $fillable = ['plan_id', 'amount', 'currency', 'billing_interval', 'is_yearly'];
+    protected $fillable = ['plan_id', 'amount', 'currency', 'billing_interval'];
 
     public function plan()
     {

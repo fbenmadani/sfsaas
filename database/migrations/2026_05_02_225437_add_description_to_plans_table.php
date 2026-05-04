@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('features', function (Blueprint $table) {
-            $table->string('type')->default('boolean'); // 'boolean' or 'limit'
+        Schema::table('plans', function (Blueprint $table) {
+            $table->text('description')->nullable()->after('slug');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('features', function (Blueprint $table) {
-            $table->dropColumn('type');
+        Schema::table('plans', function (Blueprint $table) {
+            $table->dropColumn('description');
         });
     }
 };

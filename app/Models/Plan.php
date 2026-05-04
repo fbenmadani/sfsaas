@@ -13,6 +13,10 @@ class Plan extends Model
 
     protected $fillable = ['name', 'slug', 'description', 'is_active'];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
     public function prices()
     {
         return $this->hasMany(Price::class);
@@ -20,6 +24,6 @@ class Plan extends Model
 
     public function features()
     {
-        return $this->belongsToMany(Feature::class)->withPivot('limit_value');
+        return $this->belongsToMany(Feature::class, 'plan_feature')->withPivot('limit_value');
     }
 }

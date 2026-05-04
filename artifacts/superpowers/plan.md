@@ -1,42 +1,56 @@
 ## Goal
-Write comprehensive feature and unit tests for `Tenant` and `User` models using Pest PHP to ensure their relationships, database integration, and custom methods are functioning as expected.
+Create a premium landing page (Home), Features, Pricing, and About pages for sfSaas using Flux UI and Tailwind CSS 4.
 
 ## Assumptions
-- The application uses `stancl/tenancy` for multi-tenancy.
-- Pest PHP is the testing framework of choice configured in the application.
-- Tests will follow `laravel-boost-guidelines` by favoring Feature tests when interacting with the database.
-- `Tenant` model has a `users` HasMany relationship, and `User` model has a `tenant` BelongsTo relationship.
-- `User` model has a custom `initials()` method and specific attribute casts (`is_admin`, `tenant_id`).
+- Using Flux UI Free components.
+- Using Tailwind CSS 4 (Vite plugin).
+- Application uses `stancl/tenancy` for domain-based routing (central routes).
+- Pages should be visually stunning, responsive, and follow SEO best practices.
 
 ## Plan
 
-### 1. Create Models Test Files
-- **Files**: `tests/Feature/Models/TenantTest.php`, `tests/Feature/Models/UserTest.php`
-- **Change**: Use `php artisan make:test Models/TenantTest --pest` and `php artisan make:test Models/UserTest --pest` to create the test files.
-- **Verify**: Ensure files exist by checking `tests/Feature/Models` directory.
+### 1. Create Marketing Layout
+- **Files**: `resources/views/layouts/marketing.blade.php`
+- **Change**: Define a base layout with a premium Flux-based navbar (using `flux:navbar`, `flux:brand`, `flux:button`) and a comprehensive footer.
+- **Verify**: Create a temporary route to view the empty layout.
 
-### 2. Implement Tenant Model Tests
-- **Files**: `tests/Feature/Models/TenantTest.php`
-- **Change**:
-  - Add `RefreshDatabase` trait.
-  - Write a test `it('can create a tenant')` to verify model creation properties.
-  - Write a test `it('has many users')` to verify the `users` relationship successfully links to the User model.
-- **Verify**: Run `php artisan test --compact tests/Feature/Models/TenantTest.php` to ensure the Tenant tests pass.
+### 2. Define Marketing Routes
+- **Files**: `routes/web.php`
+- **Change**: Register routes for `/` (home), `/features`, `/pricing`, and `/about` within the central domain group.
+- **Verify**: Run `php artisan route:list` to ensure routes are correctly mapped to views.
 
-### 3. Implement User Model Tests
-- **Files**: `tests/Feature/Models/UserTest.php`
-- **Change**:
-  - Add `RefreshDatabase` trait.
-  - Write a test `it('calculates the correct initials')` to verify the `initials()` method. Test different name lengths.
-  - Write a test `it('belongs to a tenant')` to verify the `tenant()` relationship resolves to the correct Tenant model.
-  - Write a test `it('correctly casts attributes')` to check if `is_admin` is cast to boolean and `tenant_id` to string.
-- **Verify**: Run `php artisan test --compact tests/Feature/Models/UserTest.php` to ensure the User tests pass.
+### 3. Implement Home Page
+- **Files**: `resources/views/marketing/home.blade.php`
+- **Change**: Implement a high-impact Hero section with a generated illustration, a summary of Sales/Marketing/Service features, and a clear CTA.
+- **Verify**: Navigate to root URL and check for "wow" factor and responsiveness.
+
+### 4. Implement Features Page
+- **Files**: `resources/views/marketing/features.blade.php`
+- **Change**: Detailed breakdown of the three core modules (Sales, Marketing, Customer Service) using Flux cards and icons.
+- **Verify**: Navigate to `/features` and ensure clear value proposition.
+
+### 5. Implement Pricing Page
+- **Files**: `resources/views/marketing/pricing.blade.php`
+- **Change**: Create a multi-tier pricing table (e.g., Starter, Pro, Enterprise) using Flux's clean aesthetic and interactive buttons.
+- **Verify**: Navigate to `/pricing` and check layout on mobile.
+
+### 6. Implement About Page
+- **Files**: `resources/views/marketing/about.blade.php`
+- **Change**: Design an "About Us" page detailing the mission to help SMBs, following the same premium design system.
+- **Verify**: Navigate to `/about`.
+
+### 7. Automated Testing & Verification
+- **Files**: `tests/Feature/MarketingPagesTest.php`
+- **Change**: Write Pest tests to assert that all four pages return a 200 OK status.
+- **Verify**: Run `php artisan test --filter MarketingPagesTest`.
 
 ## Risks & mitigations
-- **Risk**: Creating a `Tenant` model might trigger multi-tenant database creation, which can be computationally expensive and slow down tests.
-- **Mitigation**: Using `RefreshDatabase`. If database integration is strictly needed, rely on Laravel testing utilities.
-- **Risk**: `stancl/tenancy` might encounter issues resolving default settings during testing.
-- **Mitigation**: Rely on tenant/user factories or mock the creation safely without full database provisioning where unnecessary.
+- **Risk**: Flux UI Pro components might be accidentally used.
+- **Mitigation**: Strictly use components listed in the Free edition documentation.
+- **Risk**: Tailwind 4 breaking changes or config issues.
+- **Mitigation**: Verify compilation with `npm run build` early.
 
 ## Rollback plan
-- Remove `tests/Feature/Models/TenantTest.php` and `tests/Feature/Models/UserTest.php`.
+- Revert `routes/web.php` to its previous state.
+- Delete the created layout and marketing view directory.
+- `git checkout routes/web.php` and `rm -rf resources/views/marketing resources/views/layouts/marketing.blade.php`.

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Plan;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Plan>
@@ -17,8 +18,13 @@ class PlanFactory extends Factory
      */
     public function definition(): array
     {
+        $name = $this->faker->unique()->word().' Plan';
+
         return [
-            //
+            'name' => $name,
+            'slug' => Str::slug($name),
+            'description' => $this->faker->sentence(),
+            'is_active' => true,
         ];
     }
 }

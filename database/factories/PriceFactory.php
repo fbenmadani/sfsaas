@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Plan;
 use App\Models\Price;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,10 @@ class PriceFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'plan_id' => Plan::factory(),
+            'amount' => $this->faker->numberBetween(1000, 10000),
+            'currency' => 'USD',
+            'billing_interval' => $this->faker->randomElement(['month', 'year', 'once']),
         ];
     }
 }

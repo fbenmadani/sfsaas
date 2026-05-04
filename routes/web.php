@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Admin\Features\Index;
+use App\Livewire\Admin\Plans\Edit;
 use Illuminate\Support\Facades\Route;
 
 foreach (config('tenancy.central_domains') as $domain) {
@@ -15,11 +17,11 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::view('dashboard', 'dashboard')->name('dashboard');
             Route::livewire('/users', 'users.index')->name('users.index');
             Route::middleware('admin')->group(function () {
-                // Route::get('admin/users', function () { return 'Users'; })->name('admin.users.index');
                 Route::livewire('admin/users', 'admin.users.index')->name('admin.users.index');
-                Route::livewire('admin/features', 'admin.features.index')->name('admin.features.index');
                 Route::livewire('admin/tenants', 'admin.tenants.index')->name('admin.tenants.index');
-                // Route::view('admin', 'admin')->name('admin.users.index');
+                Route::get('admin/features', Index::class)->name('admin.features.index');
+                Route::get('admin/plans', App\Livewire\Admin\Plans\Index::class)->name('admin.plans.index');
+                Route::get('admin/plans/{plan}/edit', Edit::class)->name('admin.plans.edit');
             });
         });
 
