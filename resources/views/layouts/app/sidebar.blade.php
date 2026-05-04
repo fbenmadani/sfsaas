@@ -18,9 +18,13 @@
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
-                        <flux:sidebar.nav>
+            <flux:sidebar.nav>
                 <flux:sidebar.item icon="building-office" :href="route('admin.tenants.index')" :current="request()->routeIs('admin.tenants.index')" wire:navigate>
                     {{ __('Tenants') }}
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="building-office" :href="route('admin.plans')" :current="request()->routeIs('admin.tenants.index')" wire:navigate>
+                    {{ __('Plan') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>        
 
