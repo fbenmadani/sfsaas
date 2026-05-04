@@ -40,3 +40,4 @@
         {{ $features->links() }}
     </div>
 </div>
+</div>

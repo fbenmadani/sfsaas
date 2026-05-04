@@ -6,6 +6,7 @@
         <input type="text" wire:model.debounce.300ms="search" placeholder="Search plans..." class="form-input">
     </div>
 
+    <a href="{{ route('admin.plans.create') }}" class="btn btn-sm btn-primary">Create Plan</a>
     <!-- Table of Plans -->
     <table class="table">
         <thead>

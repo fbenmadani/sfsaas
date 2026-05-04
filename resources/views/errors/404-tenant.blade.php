@@ -23,7 +23,7 @@
             </h2>
             
             <p class="mt-4 text-gray-600 dark:text-zinc-400">
-                Oops! We couldn't find the account  you're looking for. The domain you are trying to access doesn't exist or has been disabled.
+                Oops! We couldn't find the account you're looking for. The domain you are trying to access doesn't exist or has been disabled.
             </p>
         </div>
 
