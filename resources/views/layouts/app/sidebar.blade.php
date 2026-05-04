@@ -23,8 +23,8 @@
                     {{ __('Tenants') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="building-office" :href="route('admin.plans')" :current="request()->routeIs('admin.tenants.index')" wire:navigate>
-                    {{ __('Plan') }}
+                <flux:sidebar.item icon="currency-dollar" :href="route('admin.plans.index')" :current="request()->routeIs('admin.tenants.index')" wire:navigate>
+                    {{ __('Plans') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>        
 

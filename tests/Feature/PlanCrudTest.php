@@ -30,7 +30,7 @@ beforeEach(function () {
 // We need to simulate the interaction with the Livewire component's save action.
 it('can create a plan', function () {
     // First, get the page that loads the create form
-    $response = $this->get(route('admin.plans.create'));
+    $response = $this->get(route('admin.plans.index'));
     $response->assertStatus(200);
     $response->assertSee('Create New Plan'); // Ensure the create form page loads
 

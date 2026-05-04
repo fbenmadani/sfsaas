@@ -8,7 +8,7 @@ new class extends Component
     public $plans;
 
     // Form properties
-    public bool $modalOpen = true;
+    public bool $modalOpen = false;
     public string $name = '';
     public string $slug = '';
     public string $description = '';
@@ -66,7 +66,7 @@ new class extends Component
     <h1 class="text-2xl font-bold mb-4">Plan Management</h1>
 
     <div class="mb-4">
-        <flux:button.primary wire:click="$set('modalOpen', true)">New Plan</flux:button.primary>
+        <flux:button  wire:click="$set('modalOpen', true)">New Plan</flux:button.primary>
     </div>
 
     <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
@@ -98,9 +98,9 @@ new class extends Component
                             @endif
                         </td>
                         <td class="py-4 px-6">
-                            <flux:button.link wire:click="delete({{ $plan->id }})" class="text-red-600 hover:text-red-900" confirm="Are you sure you want to delete this plan?">
+                            <flux:button variant="danger" wire:click="delete({{ $plan->id }})" class="text-red-600 hover:text-red-900" confirm="Are you sure you want to delete this plan?">
                                 Delete
-                            </flux:button.link>
+                            </flux:button >
                         </td>
                     </tr>
                 @empty
@@ -116,13 +116,13 @@ new class extends Component
         <x-slot:title>Create New Plan</x-slot:title>
         <x-slot:content>
             <form wire:submit="create" class="space-y-4">
-                <flux:input.text wire:model="name" label="Name" placeholder="Enter plan name" />
-                <flux:input.text wire:model="slug" label="Slug" placeholder="Enter unique slug" />
-                <flux:input.textarea wire:model="description" label="Description" placeholder="Enter plan description" />
-                <flux:input.toggle wire:model="isActive" label="Is Active" />
+                <flux:input wire:model="name" label="Name" placeholder="Enter plan name" />
+                <flux:input wire:model="slug" label="Slug" placeholder="Enter unique slug" />
+                <flux:textarea wire:model="description" label="Description" placeholder="Enter plan description" />
+                <flux:switch wire:model="isActive" label="Is Active" />
                 <div class="flex justify-end space-x-2">
-                    <flux:button.secondary wire:click="$set('modalOpen', false)" type="button">Cancel</flux:button.secondary>
-                    <flux:button.primary type="submit">Create</flux:button.primary>
+                    <flux:button   wire:click="$set('modalOpen', false)" type="button">Cancel</flux:button>
+                    <flux:button   type="submit">Create</flux:button>
                 </div>
             </form>
         </x-slot:content>
