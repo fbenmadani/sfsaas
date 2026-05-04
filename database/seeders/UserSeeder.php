@@ -22,5 +22,14 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        $user = User::create([
+            'name' => 'User',
+            'email' => 'user@sfsaas.test',
+            'password' => Hash::make('password'),
+            'is_admin' => false,
+            'email_verified_at' => now(),
+        ]);
+
     }
 }

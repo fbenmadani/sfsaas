@@ -14,7 +14,7 @@ class FeatureSeeder extends Seeder
     {
         //
 
-        Feature::create([
+        $feature_projects = Feature::create([
             'name' => 'Projects',
             'slug' => 'projects',
             'type' => 'limit',
