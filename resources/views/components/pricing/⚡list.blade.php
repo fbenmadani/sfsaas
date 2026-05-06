@@ -47,7 +47,7 @@ new class extends Component
             <div class="border rounded-lg p-6 shadow-sm bg-white flex flex-col">
                 <h3 class="text-xl font-bold">{{ $plan->name }}</h3>
                 <div class="mt-4">
-                    <span class="text-4xl font-extrabold">${{ $currentPrice->amount }}</span>
+                    <span class="text-4xl font-extrabold">{{ $plan->prices->where('billing_interval', $period)->first()?->amount }}</span>
                     <span class="text-gray-500">/{{ $period }}</span>
                 </div>
 

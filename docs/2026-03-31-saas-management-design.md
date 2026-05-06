@@ -1,396 +1,377 @@
 **Date:** 2026-03-31
-**Status:** Draft
-**Topic:** SAAS Feature
+**Last Updated:** 2026-05-05
+**Status:** In Progress
+**Topic:** SaaS Management — Billing, Plans & Admin
+**Project:** sfSaas
+
+---
 
 ## 1. Overview
-sfSaas is a complete SaaS starter kit that includes everything you need to start your SaaS business. It comes ready with a huge list of reusable components, a complete admin panel, user dashboard, user authentication, user & role management, plans & pricing, subscriptions, payments, emails, and more.
 
+sfSaas is a free and open-source, batteries-included multitenant SaaS starter kit built on Laravel 13, Livewire 4, Tailwind CSS, Alpine.js, and Flux UI, with multi-database tenancy powered by Tenancy for Laravel (stancl/tenancy). The goal is to reduce the time required to launch a modern Laravel SaaS by solving the difficult parts up front: central user identity, subdomain-based tenant identification, per-tenant databases, plan-aware billing foundations, and admin control surfaces.
+
+---
+
+## 2. Architecture Decisions
+
+| Decision | Chosen Approach | Status |
+|---|---|---|
+| Frontend stack | Laravel 13 + Livewire 4 + Tailwind + Alpine.js + Flux UI | ✅ Implemented |
+| Tenancy model | Multi-database (stancl/tenancy) | ✅ Implemented |
+| Tenant identification | Subdomain via `InitializeTenancyBySubdomain` | ✅ Implemented |
+| Identity source of truth | Central `users` table | ✅ Implemented |
+| Admin role | `is_admin` boolean flag on `users` | ✅ Implemented |
+| Auth backend | Laravel Fortify (login, register, 2FA, password reset, email verification) | ✅ Implemented |
+| Billing owner | Tenant (not individual user) | 🔲 Planned |
+| Billing engine | Provider-agnostic abstraction (Stripe-first) | 🔲 Planned |
+| API layer | Central + Tenant REST API | 🔲 Planned |
 
-Designing a robust billing engine for a SaaS requires a balance between flexibility (for marketing) and strict data integrity (for accounting). Since you are managing subscriptions with feature-based limits and multi-tenancy, the database schema needs to be decoupled to allow for plan changes without breaking historical invoices.
+---
 
-Here is a conceptual model for your billing system.
+## 3. Domain Model
+
+### 3.1 Central Database — Current State
 
+These tables exist and are migrated:
 
-sFsaas Kit is a free and open-source, batteries-included multitenant SaaS starter kit built on Laravel 13, Livewire, Tailwind CSS, Alpine.js, and Flux UI, with multi-database tenancy powered by Tenancy for Laravel (stancl/tenancy). Laravel 13’s official starter kits provide a supported Livewire-based baseline with Flux UI, authentication flows, and team-aware foundations that can be extended into a production-grade SaaS architecture. Tenancy for Laravel supports both multi-database tenancy and subdomain-based tenant identification, which aligns with the chosen architecture for SaaS Kit.
+| Entity | Purpose | Status |
+|---|---|---|
+| `users` | Global identity: name, email, password, is_admin, 2FA columns, tenant_id | ✅ Migrated |
+| `tenants` | Tenant registry (stancl/tenancy default — id, tenancy_db_name, data, etc.) | ✅ Migrated |
+| `domains` | Maps tenants to subdomain identifiers for routing | ✅ Migrated |
+| `plans` | Commercial plan blueprints: name, slug, description, is_active | ✅ Migrated |
+| `prices` | Per-plan billing amounts & intervals: plan_id, amount, currency, billing_interval | ✅ Migrated |
+| `features` | Feature catalog: name, slug, type (`boolean`\|`limit`) | ✅ Migrated |
+| `plan_feature` | Pivot: plan ↔ feature entitlements with `limit_value` | ✅ Migrated |
+| `subscriptions` | Tenant subscription state: tenant_id, price_id, status, trial_ends_at, ends_at | ✅ Migrated |
 
-The product goal is to provide an opinionated but extensible repository that gives developers a production-ready starting point for tenant provisioning, central identity, tenant-scoped applications, billing foundations, REST APIs, onboarding, and testing. Tenancy for Laravel’s quickstart recommends a Tenant model using TenantWithDatabase, HasDatabase, and HasDomains, with tenant databases created and migrated through the package lifecycle. The tenancy package also documents subdomain identification through InitializeTenancyBySubdomain, where domains are stored as subdomain values instead of full hostnames.
+### 3.2 Central Database — Planned (Not Yet Migrated)
 
-Product goals
-The repository should reduce the time required to launch a modern Laravel SaaS by solving the difficult parts up front: central user identity, many-to-many tenant membership, per-tenant databases, tenant provisioning, plan-aware billing foundations, and application boundaries that preserve isolation. Laravel’s own multi-tenant case study emphasizes resolving tenant context early in the request lifecycle, binding the current tenant into the container, and carrying tenant context into cache, config, queues, and authorization layers.
+| Entity | Purpose |
+|---|---|
+| `tenant_user` | Many-to-many membership (currently users have a direct `tenant_id` FK) |
+| `tenant_invitations` | Email-based membership invitations |
+| `plan_versions` | Versioned commercial definitions (forward-only mutations) |
+| `subscription_items` | Per-price/per-feature subscription components |
+| `subscription_phases` | Trial, paid, grace, paused phase records |
+| `subscription_changes` | Audit log of upgrades/downgrades/renewals |
+| `subscription_discounts` | Coupons and discounts |
+| `invoices` / `invoice_line_items` | Immutable billing records |
+| `credit_notes` | Credit adjustments |
+| `payments` | Provider payment transactions |
+| `billing_webhook_events` | Raw provider events for idempotent processing |
 
-Primary goals:
+### 3.3 Tenant Database
 
-Central identity with globally unique users by email.
+Tenant migrations live in `database/migrations/tenant/`. Current state is the stancl/tenancy default structure (users, sessions, etc.). Additional tables (roles, permissions, entitlements, usage counters) are planned.
 
-Multi-database tenancy with one application database per tenant.
+---
 
-Subdomain-based tenant identification via tenant middleware.
+## 4. Eloquent Models — Current State
 
-A central control plane for signup, tenant creation, invitations, tenant switching, and billing administration.
+### `Plan` (`app/Models/Plan.php`)
+```php
+protected $fillable = ['name', 'slug', 'description', 'is_active'];
+protected $casts = ['is_active' => 'boolean'];
 
-A tenant application layer that runs on tenant subdomains with strict per-database isolation.
+public function prices(): HasMany       // → Price
+public function features(): BelongsToMany  // → Feature via plan_feature (with limit_value pivot)
+```
 
-A billing foundation that separates mutable catalog entities from immutable invoice history and proration outcomes.
+### `Price` (`app/Models/Price.php`)
+```php
+protected $fillable = ['plan_id', 'amount', 'currency', 'billing_interval'];
 
-A repository structure that supports maintainability, testability, and incremental feature growth.
+public function plan(): BelongsTo  // → Plan
+```
 
-Non-goals
-The initial repository should not try to solve every SaaS variation. It should not include custom ERP-grade accounting, marketplace billing, per-seat revenue recognition, or white-label multi-region infrastructure in v1. Stripe and Paddle both support complex proration and billing policies, but those provider-specific capabilities should be abstracted rather than deeply coupled into the first release.
+### `Feature` (`app/Models/Feature.php`)
+```php
+protected $fillable = ['name', 'slug', 'type'];  // type: 'boolean' | 'limit'
+```
 
-Target users
-The primary users are Laravel teams and indie founders who want to launch a serious multitenant SaaS quickly without stitching together tenancy, auth, billing, and dashboards from scratch. Laravel 13’s starter kits are positioned as the official starting point for Livewire + Flux UI applications, making them a natural developer-facing foundation for this audience.
+### `Subscription` (`app/Models/Subscription.php`)
+```php
+protected $fillable = ['tenant_id', 'price_id', 'status', 'trial_ends_at', 'ends_at'];
 
-Architecture decisions
-The repository adopts the following architecture as fixed design decisions:
+public function price(): BelongsTo   // → Price
+public function scopeActive($query)  // filters status = 'active'
+```
 
-Decision	Chosen approach	Rationale
-Frontend stack	Laravel 13 + Livewire + Tailwind + Alpine + Flux UI	Official Laravel starter path with supported UI primitives and auth workflows.
-Tenancy model	Multi-database	Strong tenant isolation and cleaner enterprise path.
-Tenant identification	Subdomain	First-class support in Tenancy for Laravel via subdomain middleware.
-Identity source of truth	Central users table	Supports unique user emails and many-to-many tenant membership.
-Membership model	Central pivot between users and tenants	Prevents users.tenant_id coupling and supports one user across many tenants.
-Tenant data	Per-tenant databases	Isolates operational data and business records per workspace.
-Billing owner	Tenant, not user	Billing belongs to the workspace in a multitenant SaaS.
-Billing engine	Provider-agnostic abstraction with Stripe-first implementation	Stripe and Paddle differ in proration mechanics, so provider-neutral contracts are required.
-Functional requirements
-Central app
-The central app acts as the control plane. It lives on one or more configured central domains and is responsible for signup, authentication, tenant registry, invitations, memberships, billing management, and tenant switching. Tenancy for Laravel’s quickstart requires central domains to be defined explicitly in config/tenancy.php, and central routes should be bound to those domains.
+### `Tenant` (`app/Models/Tenant.php`)
+```php
+// Extends stancl/tenancy BaseTenant, implements TenantWithDatabase
+use HasDatabase, HasDomains;
 
-Required capabilities:
+public function users(): HasMany  // → User
+```
 
-User registration and authentication on the central domain.
+### `User` (`app/Models/User.php`)
+```php
+// Attributes: name, email, password, is_admin
+// Uses: HasFactory, Notifiable, TwoFactorAuthenticatable (Fortify)
+// Casts: email_verified_at → datetime, is_admin → boolean, tenant_id → string
 
-Unique email enforcement in the central users table.
+public function tenant(): BelongsTo  // → Tenant
+public function initials(): string   // helper: first letters of name words
+```
 
-Tenant creation wizard.
+---
 
-Subdomain availability check and reservation.
+## 5. Factories
 
-Membership invitations by email.
+All core billing models have factories with sensible defaults:
 
-Membership acceptance and tenant access management.
+| Factory | States / Notes |
+|---|---|
+| `PlanFactory` | name, slug, description, is_active |
+| `PriceFactory` | plan_id, amount, currency, billing_interval |
+| `FeatureFactory` | name, slug, type |
+| `SubscriptionFactory` | tenant_id, price_id, status |
+| `UserFactory` | name, email, password; supports `is_admin` override |
 
-Tenant switcher for users with access to multiple tenants.
+---
 
-Billing account management.
+## 6. Routing & Middleware
 
-Admin console for central operators.
+All central routes are bound to configured `central_domains` (from `config/tenancy.php`). Route structure in `routes/web.php`:
 
-Tenant app
-The tenant app runs on {tenant}.domain.tld and is initialized by tenancy middleware. Tenancy for Laravel documents InitializeTenancyBySubdomain as the mechanism for resolving tenant context from the subdomain and bootstrapping tenant-aware application behavior.
+```
+/                       → marketing.home              (guest)
+/features               → marketing.features          (guest)
+/pricing                → marketing.pricing           (guest)
+/about                  → marketing.about             (guest)
+/sign-up                → pages::account.sign-up      (Livewire Volt, guest)
 
-Required capabilities:
+/dashboard              → dashboard                   (auth + verified)
+/users                  → users.index                 (auth + verified, Livewire)
 
-Tenant-scoped authentication session after central handoff.
+/admin/users            → admin.users.index           (auth + verified + admin)
+/admin/tenants          → admin.tenants.index         (auth + verified + admin)
+/admin/features         → admin.features.index        (auth + verified + admin)
+/admin/plans            → admin.plans.index           (auth + verified + admin)
+```
 
-Tenant-local dashboard and settings.
+Auth/settings routes live in `routes/settings.php` (Fortify-backed).
 
-Tenant-scoped roles and permissions.
+**Middleware:**
+- `admin` → `App\Http\Middleware\IsAdmin` (checks `is_admin` flag, returns 403 if false)
+- Fortify middleware handles `auth`, `verified`, `password.confirm`, etc.
 
-Access to business modules stored in the tenant database.
+---
 
-REST API with tenant-aware access control.
+## 7. Livewire Components — Current State
 
-Tenant-local notifications, jobs, storage, and usage counters.
+### Class-based Components (`app/Livewire/`)
 
-Billing engine
-The billing engine must support plan catalogs, prices, subscription state, trials, discounts, invoices, and entitlements without mutating historical billing records. Stripe’s documentation shows that subscription changes can generate proration adjustments and invoice items based on the state of the subscription at change time, while Paddle allows multiple proration billing policies when updating a subscription.
+| Component | Location | Type | Description |
+|---|---|---|---|
+| `Admin\Features\Index` | `Admin/Features/Index.php` | Class-based | Full CRUD for features: create, edit, delete, sort, paginate |
+| `Admin\Plans\Index` | `Admin/Plans/Index.php` | Class-based | List plans with price/feature counts, sort, toggle active |
 
-Required capabilities:
+> **Note:** `Admin\Plans\Index` renders `livewire.admin.plans.index` — this view file is **missing**. The plans page currently raises a `View not found` error. The view logic exists as a Volt SFC at `resources/views/components/admin/plans/⚡index.blade.php` but the class-based component renders it via the `livewire.` namespace. This conflict needs to be resolved (see §10 Known Issues).
 
-Catalog management for plans, versions, prices, and features.
+### Volt SFC Components (`resources/views/components/`)
 
-Trial and paid subscription phases.
+| Component | Path | Notes |
+|---|---|---|
+| `admin.users.index` | `components/admin/users/⚡index.blade.php` | SFC with inline class: user table, sortable columns, pagination |
+| `admin.tenants.index` | `components/admin/tenants/⚡index.blade.php` | SFC |
+| `admin.plans.index` | `components/admin/plans/⚡index.blade.php` | SFC (conflicts with class-based Plans\Index — see §10) |
+| `users.index` | `components/users/⚡index.blade.php` | SFC for the non-admin user list page |
+| `pricing.list` | `components/pricing/⚡list.blade.php` | Marketing pricing display component |
 
-Upgrade preview and execution.
+---
 
-Scheduled downgrades at period end.
+## 8. Views & Layouts
 
-Invoice synchronization from billing provider.
+### Layouts
 
-Entitlement derivation and usage limit enforcement.
+| Layout | Path | Description |
+|---|---|---|
+| `layouts.app` | `resources/views/layouts/app.blade.php` | Main app shell (sidebar + content) |
+| `layouts.auth` | `resources/views/layouts/auth.blade.php` | Centered auth layout |
 
-Billing webhooks with idempotent processing.
+The `layouts/app/` directory contains partials: `sidebar.blade.php`, etc.
 
-Domain model
-Central database entities
-The central database stores identity, tenancy registry, membership, and cross-tenant billing control data.
+### Marketing Pages
 
-Entity	Purpose
-users	Global identity, unique email, password/MFA, profile, account state.
-tenants	Tenant registry, UUID, slug, status, metadata, provisioning state.
-domains	Maps tenants to subdomain identifiers for routing.
-tenant_user	Many-to-many membership between users and tenants, with role and status.
-tenant_invitations	Invitation records by email and role.
-tenant_billing_accounts	Billing owner metadata and provider customer identifiers.
-plans	Commercial plan group.
-plan_versions	Versioned commercial definition of a plan.
-prices	Billing interval and amount records per plan version.
-features	Feature catalog.
-plan_feature_values	Entitlement values per plan version.
-subscriptions	Tenant-owned subscription state.
-subscription_items	Per-price or per-feature components of a subscription.
-subscription_phases	Trial, paid, grace, paused phases.
-subscription_changes	Upgrade, downgrade, renewal, cancellation, and proration policy log.
-subscription_discounts	Coupons and discounts applied to subscriptions.
-invoices	Immutable invoice headers.
-invoice_line_items	Immutable line items with catalog snapshots.
-credit_notes	Credit adjustments.
-payments	Provider payment transactions.
-billing_webhook_events	Raw provider events for idempotent processing.
-billing_sync_logs	Diagnostics for billing sync.
-Tenant database entities
-Each tenant database stores operational tenant-local records and synchronized identity projections where needed.
+All static marketing pages live in `resources/views/marketing/`:
+- `home.blade.php` — landing page
+- `features.blade.php` — feature highlights
+- `pricing.blade.php` — pricing table (uses `<livewire:pricing.list>`)
+- `about.blade.php` — about page
 
-Entity	Purpose
-users	Tenant-local projection of central users for local policies and joins.
-roles, permissions, model_has_roles	Tenant-local authorization tables.
-settings	Tenant application settings.
-audit_logs	Tenant-local audit trail.
-notifications	Tenant-local notification state.
-tenant_entitlements	Active feature entitlements derived from subscription.
-tenant_usage_counters	Fast counters by feature and period.
-tenant_usage_events	Metered event log.
-projects, customers, timesheets, etc.	Business modules shipped by the starter or installed later.
-Identity and authentication design
-Global identity is central and based on a unique email address. Community guidance around Tenancy for Laravel repeatedly uses a central user model, synced or mirrored into tenant databases, to support cross-tenant membership while preserving tenant database isolation.
+### Dashboard
 
-Authentication design:
+`resources/views/dashboard.blade.php` — authenticated user dashboard (central domain).
 
-Central login happens on the central domain.
+---
 
-After login, the user sees the list of tenant memberships from tenant_user.
+## 9. Authentication — Current State
 
-On tenant selection, the app redirects to the tenant subdomain.
+Authentication is handled by **Laravel Fortify** with the following capabilities implemented:
 
-Tenant middleware resolves the tenant from the subdomain and boots tenancy.
+| Feature | Status |
+|---|---|
+| Login | ✅ |
+| Registration | ✅ |
+| Password Reset | ✅ |
+| Email Verification | ✅ |
+| Two-Factor Authentication (TOTP + recovery codes) | ✅ |
+| Password Confirmation | ✅ |
 
-The tenant app establishes a tenant-local session for the corresponding tenant user projection.
+Auth views live in `resources/views/livewire/auth/` and `resources/views/livewire/settings/`.
 
-Password, MFA, email verification, and account recovery remain central responsibilities. Laravel’s Livewire starter kit uses Fortify-based authentication flows and can be extended for these central account features.
+The sign-up flow (`/sign-up`) is a Livewire Volt page at `resources/views/pages/account/` and handles tenant creation after registration.
 
-Tenant lifecycle
-Tenancy for Laravel’s quickstart describes tenant creation as an event-driven lifecycle where tenant database creation and migrations are part of the onboarding flow. The repository should implement tenant onboarding as a provisioning pipeline instead of a single controller action.
+---
 
-Provisioning flow:
+## 10. Known Issues & Open Work
 
-Register or identify the central user.
+### 🔴 Blocker: Plans Index View Not Found
 
-Create tenant registry record.
+- `App\Livewire\Admin\Plans\Index::render()` calls `view('livewire.admin.plans.index')`.
+- The file `resources/views/livewire/admin/plans/index.blade.php` does not exist.
+- A Volt SFC exists at `resources/views/components/admin/plans/⚡index.blade.php` but it cannot be used by the class-based component directly.
+- **Resolution options:**
+  1. Create the missing Blade view at `resources/views/livewire/admin/plans/index.blade.php` and extract the HTML from the Volt SFC into it.
+  2. Delete `app/Livewire/Admin/Plans/Index.php` and rely entirely on the Volt SFC (which is resolved by `Route::livewire('admin/plans', 'admin.plans.index')`).
 
-Reserve and attach subdomain in domains.
+### 🟡 Inconsistency: Mixed Component Patterns
 
-Create tenant membership with owner role.
+- Features uses a class-based component (`Admin\Features\Index`) with a proper view in `resources/views/components/admin/features/⚡index.blade.php`.
+- Plans has both a class-based component (incomplete) and a Volt SFC.
+- Users/Tenants admin pages use Volt SFCs only.
+- The project should settle on one pattern per section.
 
-Trigger tenant database creation through Tenancy for Laravel.
+### 🟡 Membership Model Simplification
 
-Run tenant migrations and seed baseline data.
+- Currently `users` has a direct `tenant_id` FK.
+- The original design calls for a `tenant_user` pivot to support many-to-many membership (one user, multiple tenants).
+- Tenant switching UI and invitation flows are not yet implemented.
 
-Create tenant-local user projection for the owner.
+### 🔲 Billing Engine Not Yet Implemented
 
-Provision default roles, settings, and starter records.
+- `Subscription` model exists with basic fields but no payment provider integration.
+- No Stripe/Paddle service, webhook handling, or entitlement derivation.
+- MRR/ARR metrics, churn calculation, and invoice records are all planned.
 
-Redirect to tenant app.
+---
 
-Billing architecture
-The billing engine must separate catalog, subscription state, entitlements, usage, and accounting records. Stripe documents that prorations create invoice adjustments tied to the current subscription context, and Paddle documents multiple proration modes when changing subscriptions, so the repository must preserve the billing decision and resulting records without rewriting history.
+## 11. Testing — Current State
 
-Billing design rules:
+### Feature Tests (`tests/Feature/`)
 
-Catalog records are versioned and mutable only forward.
+| Test File | Coverage |
+|---|---|
+| `Auth/AuthenticationTest.php` | Login, logout flows |
+| `Auth/RegistrationTest.php` | User registration |
+| `Auth/PasswordResetTest.php` | Password reset flow |
+| `Auth/EmailVerificationTest.php` | Email verification |
+| `Auth/TwoFactorChallengeTest.php` | 2FA challenge flow |
+| `Auth/PasswordConfirmationTest.php` | Password confirmation |
+| `Admin/FeatureIndexTest.php` | Full CRUD for features (admin gate, create, edit, delete, validation, unique slug) |
+| `Admin/PlanTest.php` | Plans index access, listing with counts, toggle active, sorting |
+| `Central/Admin/UserManagementTest.php` | Admin user management |
+| `MarketingPagesTest.php` | All marketing pages return 200 |
+| `DashboardTest.php` | Dashboard access (auth required) |
+| `HomePageTest.php` | Home page accessible |
+| `TenantIdentificationTest.php` | Subdomain-based tenant resolution |
+| `PlanCrudTest.php` | Plan CRUD via HTTP |
 
-Invoice and payment records are immutable after issuance, except through explicit credit notes.
+### Unit Tests (`tests/Unit/`)
 
-Entitlements are derived snapshots, not computed from live plan tables on every request.
+| Test File | Coverage |
+|---|---|
+| `Models/PlanTest.php` | fillable, casts, relationships (prices, features) |
+| `Models/PriceTest.php` | fillable, plan relationship |
+| `Models/FeatureTest.php` | fillable |
 
-Upgrades can be previewed before execution when the provider supports preview APIs.
+---
 
-Downgrades default to period-end execution.
+## 12. Implementation Phases — Updated Status
 
-Subscription ownership belongs to tenant_id, never user_id.
+### Phase 1: Database & Models ✅ Complete
+- Migrations for `plans`, `prices`, `features`, `plan_feature`, `subscriptions`
+- Eloquent models with relationships, casts, and `scopeActive`
+- Factories for all billing models
 
-API design
-The repository should expose a tenant-aware REST API for first-party and third-party integrations. The API should exist in two surfaces:
+### Phase 2: Core Admin UI 🔄 In Progress
+- Admin console routes protected by `IsAdmin` middleware
+- Class-based Livewire component for **Features** (full CRUD, sort, paginate) ✅
+- Class-based Livewire component for **Plans** (list, toggle active, sort) ✅
+- Plans admin view missing — renders error 🔴
+- Admin users list (Volt SFC) ✅
+- Admin tenants list (Volt SFC) ✅
 
-Central API for account, tenant membership, invitations, billing management, and tenant selection.
+### Phase 3: Marketing & Auth ✅ Complete
+- Landing page, features, pricing, about pages
+- Full Fortify auth: login, register, 2FA, password reset, email verification
+- Sign-up with tenant onboarding flow
 
-Tenant API for tenant-scoped resources and operations.
+### Phase 4: Billing Engine 🔲 Not Started
+- Payment provider integration (Stripe-first)
+- Subscription lifecycle: trials, upgrades, downgrades, cancellations
+- Proration calculation and invoice generation
+- Webhook handling (idempotent)
+- Entitlement derivation from active subscription
 
-API design principles:
+### Phase 5: Tenant Application 🔲 Not Started
+- Tenant-scoped dashboard and settings
+- Tenant-local roles & permissions
+- Usage counters and feature limit enforcement
+- Tenant-local notifications
 
-Use token-based auth appropriate for central and tenant contexts.
+### Phase 6: Notifications & Metrics 🔲 Not Started
+- MRR / ARR calculation from active subscriptions
+- Churn tracking
+- Budget alerts via Laravel Notifications
+- Admin dashboard charts (Chart.js)
 
-Never allow a central token to read tenant DB data unless explicitly exchanged for tenant context.
+---
 
-Scope rate limits and policies by tenant for tenant APIs.
+## 13. MRR / ARR Calculation Design (Planned)
 
-Include idempotency support for billing and provisioning endpoints.
-
-
-## Design  
-###1. Database Schema Overview
-To handle upgrades, downgrades, and trials effectively, you should separate the Catalog (what you sell) from the Subscription (what the user actually has).
-
-1. Plans Table: Stores the "Blueprints" (e.g., Starter, Pro, Enterprise).
-
-name, slug, trial_days, is_active.
-
-2. Prices Table: Plans should have multiple prices (Monthly vs. Yearly).
-
-plan_id, amount, currency, billing_interval (month/year).
-
-3. Features Table: A master list of all possible features (e.g., "Orders", "Team Members").
-
-4. Plan_Feature Table (Pivot): Maps features to plans with their specific limits.
-
-plan_id, feature_id, limit_value (e.g., 500 orders).
-
-5. Subscriptions Table: Tracks the user's current state.
-
-user_id (or tenant_id), plan_id, price_id, status (active, trialing, cancelled), trial_ends_at, cycle_ends_at.
-
-2. Handling Key Logic
-Trials and Discounts
-Trials: When a user signs up, set the status to trialing and calculate trial_ends_at based on the plan's trial_days. Block payment processing until the trial expires.
-
-Yearly % Off: This is handled at the Price level. You define a monthly price of $50 and a yearly price of $500 (which is ~17% off). The system simply subscribes the user to the yearly price ID.
-
-Feature Limits (The "Orders" Example)
-To enforce limits without hitting the database for every single request, you can use a "Usage" table or cache.
-
-Usage Tracking: Every time an order is created, increment a usage_count for that tenant.
-
-Validation: Before allowing an action, compare the usage_count against the limit_value defined in the Plan_Feature table for their current plan.
-
-Upgrades and Downgrades
-Proration: If a user upgrades mid-month, you must calculate the unused portion of the old plan and credit it toward the new plan.
-
-Formula: (New Price - Old Price) * (Days Remaining / Total Days in Cycle).
-
-Downgrade Logic: Usually, it is safer to set the downgrade to happen at the end of the current billing cycle to avoid complex refund calculations.
-
-## 2. Data Model
-
-
-1. The Eloquent Models
-Here is the core structure for your billing engine:
-
-PHP
-// Plan.php - The high-level package (e.g., "Pro")
-class Plan extends Model {
-    protected $fillable = ['name', 'slug', 'description', 'is_active'];
-
-    public function prices() { return $this->hasMany(Price::class); }
-    public function features() { return $this->belongsToMany(Feature::class)->withPivot('limit_value'); }
-}
-
-// Price.php - The specific cost (e.g., "$50/mo" or "$500/yr")
-class Price extends Model {
-    protected $fillable = ['plan_id', 'amount', 'currency', 'billing_interval', 'is_yearly'];
-    
-    public function plan() { return $this->belongsTo(Plan::class); }
-}
-
-// Feature.php - The logic gate (e.g., "Orders")
-class Feature extends Model {
-    protected $fillable = ['name', 'slug', 'type']; // type: 'limit' or 'boolean'
-}
-
-// Subscription.php - The bridge to the Tenant/User
-class Subscription extends Model {
-    protected $fillable = ['tenant_id', 'price_id', 'status', 'trial_ends_at', 'ends_at'];
-
-    public function price() { return $this->belongsTo(Price::class); }
-    
-    // Helper for MRR calculation
-    public function scopeActive($query) {
-        return $query->where('status', 'active');
-    }
-}
-
-
-2. Calculating MRR & ARR via Eloquent
-With this design, calculating your metrics becomes a clean collection operation. We pull the amount from the Price model to ensure we account for the yearly % off correctly.
-
-PHP
-public function getMetrics()
+```php
+public function getMetrics(): array
 {
-    // 1. Get all active subscriptions with their price data
     $activeSubscriptions = Subscription::active()->with('price')->get();
 
     $totalMrr = $activeSubscriptions->sum(function ($subscription) {
         $price = $subscription->price;
-
-        if ($price->billing_interval === 'year') {
-            // Normalize yearly price to 1 month
-            return $price->amount / 12;
-        }
-
-        return $price->amount;
+        return $price->billing_interval === 'year'
+            ? $price->amount / 12
+            : $price->amount;
     });
 
     return [
-        'mrr' => $totalMrr,
-        'arr' => $totalMrr * 12,
+        'mrr'            => $totalMrr,
+        'arr'            => $totalMrr * 12,
         'customer_count' => $activeSubscriptions->count(),
     ];
 }
+```
 
+---
 
-3. Handling Feature Limits (The "Orders" Example)
-To enforce the "Orders" limit you mentioned, you can create a helper method on your Tenant or User model. This checks the current plan's limit against the actual usage.
+## 14. Feature Limit Enforcement Design (Planned)
 
-PHP
-// Inside Tenant.php or User.php
-public function hasReachedLimit($featureSlug)
+```php
+// On Tenant model (or via a dedicated EntitlementService)
+public function hasReachedLimit(string $featureSlug): bool
 {
     $subscription = $this->subscription()->with('price.plan.features')->first();
-    
-    $feature = $subscription->price->plan->features
-        ->where('slug', $featureSlug)
-        ->first();
 
-    if (!$feature) return true; // Feature not in plan
+    $feature = $subscription?->price?->plan?->features
+        ->firstWhere('slug', $featureSlug);
+
+    if (! $feature) {
+        return true; // Feature not in plan — deny
+    }
 
     $limit = $feature->pivot->limit_value;
-    
-    // Assuming you have an 'orders_count' or similar tracking
+
     return $this->orders()->count() >= $limit;
 }
-
-### `Plan`
-- `id`: primary key
-
-
-## 3. Architecture
-
-### Provider-Agnostic Bank Sync
-
-### Logic Layers
-
-## 4. User Interface (Livewire & Flux UI)
-
-### Dashboard (`SaaS Admin/Dashboard`)
-- **Cards**: Total Tenant, Total User. MRR, ARR, Churn Rate.
-- **Charts**: Interactive suscrptions by plan (Pie/Doughnut) and monthly trends (Bar/Line) using Chart.js.
-- **Recent Susciptions**: Flux UI Table with filtering and sorting.
-
-### Management Pages
-- **Plans**: cards of plans.
-- **Pricing**: list of prices.
-- **Features**: cards of features.
-
-## 5. Implementation Strategy
-1.  **Phase 1: Database & Models**: Migrations, Models, Factories, and basic CRUD tests (Pest).
-2.  **Phase 2: Core Logic**: Actions for tenant registration, plan management, subscription management, payment management, email management.
-3.  **Phase 3: Tenant Admin**  
-   
-4.  **Phase 4: UI Development**:Landing page,Pricing Table, Registration Page, Tenant onboarding, Dashboard components, Charts, and management forms using Flux UI.
-
-5.  **Phase 5: Notifications**: Real-time budget alerts via Laravel Notifications.
-
-## 6. Testing Plan
-- **Unit Tests**: Tenats, Plans, Prices, Features, Subscriptions, Payments.
-- **Feature Tests**: registartion workflow, plan management, subscription management, payment management, email management.
-- **Browser Tests**: Interactive charts, drag-and-drop category management (if applicable).
-- **Performance Tests**:     
+```

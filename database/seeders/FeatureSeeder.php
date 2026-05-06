@@ -43,11 +43,12 @@ class FeatureSeeder extends Seeder
         ]);
 
         Feature::create([
-            'name' => 'Support',
-            'slug' => 'support',
+            'name' => 'Community Support',
+            'slug' => 'community_support',
             'type' => 'boolean',
             'is_active' => true,
         ]);
+        /*
 
         Feature::create([
             'name' => 'Custom Domain',
@@ -286,6 +287,7 @@ class FeatureSeeder extends Seeder
             'type' => 'boolean',
             'is_active' => true,
         ]);
+        */
 
     }
 }

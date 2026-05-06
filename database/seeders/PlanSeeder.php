@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Feature;
 use App\Models\Plan;
 use Illuminate\Database\Seeder;
 
@@ -33,12 +34,12 @@ class PlanSeeder extends Seeder
             'trial_days' => 0,
             'is_active' => true,
         ]);
-
+        /*
         $feature_ids = Feature::where('slug', 'projects')->first()->id;
 
         $free_plan->features()->attach($feature_ids, ['limit_value' => 1]);
         $pro_plan->features()->attach($feature_ids, ['limit_value' => 10]);
         $enterprise_plan->features()->attach($feature_ids, ['limit_value' => 100]);
-
+        */
     }
 }

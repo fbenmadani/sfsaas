@@ -1,6 +1,5 @@
 <?php
 
-use App\Livewire\Admin\Plans\Index;
 use App\Models\Feature;
 use App\Models\Plan;
 use App\Models\Price;
@@ -11,6 +10,8 @@ beforeEach(function () {
     $this->admin = User::factory()->create(['is_admin' => true]);
     $this->user = User::factory()->create(['is_admin' => false]);
 });
+
+// --- Access Control ---
 
 test('guest cannot access plans page', function () {
     $this->get(route('admin.plans.index'))
@@ -29,6 +30,8 @@ test('admin can access plans page', function () {
         ->assertOk();
 });
 
+// --- Listing ---
+
 test('plans are listed with counts', function () {
     $this->actingAs($this->admin);
     $plan = Plan::factory()->create(['name' => 'Gold Plan']);
@@ -36,36 +39,189 @@ test('plans are listed with counts', function () {
     $feature = Feature::factory()->create();
     $plan->features()->attach($feature->id, ['limit_value' => 10]);
 
-    Livewire::test(Index::class)
+    Livewire::test('admin.plans.index')
         ->assertSee('Gold Plan')
-        ->assertSee('2') // Price count
-        ->assertSee('1'); // Feature count
+        ->assertSee('2')
+        ->assertSee('1');
 });
 
-test('admin can toggle plan active status', function () {
-    $this->actingAs($this->admin);
-    $plan = Plan::factory()->create(['is_active' => true]);
-
-    Livewire::test(Index::class)
-        ->call('toggleActive', $plan->id);
-
-    expect($plan->fresh()->is_active)->toBeFalse();
-
-    Livewire::test(Index::class)
-        ->call('toggleActive', $plan->id);
-
-    expect($plan->fresh()->is_active)->toBeTrue();
-});
+// --- Sorting ---
 
 test('sorting plans works', function () {
     $this->actingAs($this->admin);
     Plan::factory()->create(['name' => 'B Plan']);
     Plan::factory()->create(['name' => 'A Plan']);
 
-    Livewire::test(Index::class)
+    Livewire::test('admin.plans.index')
         ->set('sortBy', 'name')
         ->set('sortDirection', 'asc')
         ->assertSeeInOrder(['A Plan', 'B Plan'])
         ->set('sortDirection', 'desc')
         ->assertSeeInOrder(['B Plan', 'A Plan']);
+});
+
+// --- Create ---
+
+test('admin can create a plan', function () {
+    $this->actingAs($this->admin);
+
+    Livewire::test('admin.plans.index')
+        ->set('name', 'Starter Plan')
+        ->set('slug', 'starter')
+        ->set('description', 'A starter plan')
+        ->set('isActive', true)
+        ->call('savePlan')
+        ->assertHasNoErrors()
+        ->assertDispatched('plan-saved');
+
+    expect(Plan::where('slug', 'starter')->exists())->toBeTrue();
+    expect(Plan::where('slug', 'starter')->first()->is_active)->toBeTrue();
+});
+
+test('plan creation validates required fields', function () {
+    $this->actingAs($this->admin);
+
+    Livewire::test('admin.plans.index')
+        ->set('name', '')
+        ->set('slug', '')
+        ->call('savePlan')
+        ->assertHasErrors(['name' => 'required', 'slug' => 'required']);
+});
+
+test('plan slug must be unique', function () {
+    $this->actingAs($this->admin);
+    Plan::factory()->create(['slug' => 'existing-slug']);
+
+    Livewire::test('admin.plans.index')
+        ->set('name', 'New Plan')
+        ->set('slug', 'existing-slug')
+        ->call('savePlan')
+        ->assertHasErrors(['slug' => 'unique']);
+});
+
+// --- Edit ---
+
+test('admin can edit a plan', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create(['name' => 'Original', 'slug' => 'original']);
+
+    Livewire::test('admin.plans.index')
+        ->call('editPlan', $plan->id)
+        ->assertSet('name', 'Original')
+        ->set('name', 'Updated Plan')
+        ->set('slug', 'updated-plan')
+        ->call('savePlan')
+        ->assertHasNoErrors()
+        ->assertDispatched('plan-saved');
+
+    $updated = $plan->fresh();
+    expect($updated->name)->toBe('Updated Plan');
+    expect($updated->slug)->toBe('updated-plan');
+});
+
+test('slug unique validation ignores current plan during edit', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create(['slug' => 'my-slug']);
+
+    Livewire::test('admin.plans.index')
+        ->call('editPlan', $plan->id)
+        ->set('name', 'Renamed Plan')
+        ->call('savePlan')
+        ->assertHasNoErrors();
+
+    expect($plan->fresh()->name)->toBe('Renamed Plan');
+});
+
+// --- Delete ---
+
+test('admin can delete a plan', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create();
+
+    Livewire::test('admin.plans.index')
+        ->call('deletePlan', $plan->id)
+        ->assertDispatched('plan-deleted');
+
+    expect(Plan::where('id', $plan->id)->exists())->toBeFalse();
+});
+
+// --- Toggle Active ---
+
+test('admin can toggle plan active status', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create(['is_active' => true]);
+
+    Livewire::test('admin.plans.index')
+        ->call('toggleActive', $plan->id);
+
+    expect($plan->fresh()->is_active)->toBeFalse();
+
+    Livewire::test('admin.plans.index')
+        ->call('toggleActive', $plan->id);
+
+    expect($plan->fresh()->is_active)->toBeTrue();
+});
+
+// --- Feature Management ---
+
+test('admin can attach features to a plan', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create();
+    $feature = Feature::factory()->create(['type' => 'boolean']);
+
+    Livewire::test('admin.plans.index')
+        ->call('manageFeatures', $plan->id)
+        ->assertSet('managingFeaturesPlan.id', $plan->id)
+        ->call('toggleFeature', $feature->id)
+        ->call('saveFeatures')
+        ->assertDispatched('features-updated');
+
+    expect($plan->fresh()->features)->toHaveCount(1);
+    expect($plan->fresh()->features->first()->id)->toBe($feature->id);
+});
+
+test('admin can attach a limit feature with limit value', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create();
+    $feature = Feature::factory()->create(['type' => 'limit']);
+
+    Livewire::test('admin.plans.index')
+        ->call('manageFeatures', $plan->id)
+        ->call('toggleFeature', $feature->id)
+        ->set("selectedFeatures.{$feature->id}", 500)
+        ->call('saveFeatures')
+        ->assertDispatched('features-updated');
+
+    $attached = $plan->fresh()->features->first();
+    expect($attached)->not->toBeNull();
+    expect($attached->pivot->limit_value)->toBe(500);
+});
+
+test('admin can detach features from a plan', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create();
+    $feature = Feature::factory()->create();
+    $plan->features()->attach($feature->id, ['limit_value' => 100]);
+
+    Livewire::test('admin.plans.index')
+        ->call('manageFeatures', $plan->id)
+        ->assertNotEmpty('selectedFeatures')
+        ->call('toggleFeature', $feature->id)
+        ->call('saveFeatures')
+        ->assertDispatched('features-updated');
+
+    expect($plan->fresh()->features)->toHaveCount(0);
+});
+
+test('manage features loads existing associations', function () {
+    $this->actingAs($this->admin);
+    $plan = Plan::factory()->create();
+    $feature = Feature::factory()->create(['type' => 'limit']);
+    $plan->features()->attach($feature->id, ['limit_value' => 250]);
+
+    $component = Livewire::test('admin.plans.index')
+        ->call('manageFeatures', $plan->id);
+
+    expect($component->get('selectedFeatures'))->toHaveKey($feature->id);
+    expect($component->get("selectedFeatures.{$feature->id}"))->toBe(250);
 });

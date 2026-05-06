@@ -1,4 +1,68 @@
+<?php
+
+use Livewire\Component;
+use App\Models\Feature;
+
+new class extends Component
+{
+    public $features;
+
+    public $editingFeature = null;
+    public $name;
+    public $slug;
+    public $type;
+    public $sortBy = 'name';
+    public $sortDirection = 'asc';
+
+    public function mount()
+    {
+        $this->features = Feature::all();
+    }
+
+    public function resetForm()
+    {
+        $this->name = '';
+        $this->slug = '';
+        $this->type = 'boolean';
+        $this->resetValidation();
+    }
+
+    public function create()
+    {
+        $this->validate();
+
+        Feature::create([
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'type' => $this->type,
+        ]);
+
+        $this->resetForm();
+        $this->modalOpen = false;
+        $this->features = Feature::all(); // Refresh the list
+    }
+
+    public function delete(Feature $feature)
+    {
+        $feature->delete();
+        $this->features = Feature::all(); // Refresh the list
+    }
+    
+    public function sort($column)
+    {
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDirection = 'asc';
+        }
+    }
+       
+};
+?>
+
 <div>
+     <div>
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Features</h1>
         <flux:button wire:click="$set('editingFeature', null); $set('name', ''); $set('slug', ''); $set('type', 'boolean');" x-on:click="$flux.modal('feature-modal').open()">Create Feature</flux:button>
@@ -37,8 +101,9 @@
             </flux:select>
             <div class="mt-6 flex justify-end gap-3">
                 <flux:button wire:click="save">Save</flux:button>
-                <flux:button variant="secondary" x-on:click="$flux.modal('feature-modal').close()">Cancel</flux:button>
+                <flux:button   x-on:click="$flux.modal('feature-modal').close()">Cancel</flux:button>
             </div>
         </div>
     </flux:modal>
+</div>
 </div>
