@@ -18,7 +18,7 @@ return [
     'tenant_model' => App\Models\Tenant::class,
     'id_generator' => UUIDGenerator::class,
 
-    'domain_model' => Domain::class,
+    'domain_model' => App\Models\Domain::class,
 
     /**
      * The list of domains hosting your central app.

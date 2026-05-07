@@ -15,4 +15,19 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     {
         return $this->hasMany(User::class);
     }
+
+    public function primaryDomain()
+    {
+        return $this->hasOne(Domain::class)->where('is_primary', true);
+    }
+
+    public function subdomains()
+    {
+        return $this->hasMany(Domain::class)->where('type', Domain::TYPE_SUBDOMAIN);
+    }
+
+    public function tldDomains()
+    {
+        return $this->hasMany(Domain::class)->where('type', Domain::TYPE_TLD);
+    }
 }

@@ -26,7 +26,11 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('admin.plans.index')" :current="request()->routeIs('admin.plans.index')" wire:navigate>
                     {{ __('Plans') }}
                 </flux:sidebar.item>
-            </flux:sidebar.nav>        
+
+                <flux:sidebar.item icon="globe-alt" :href="route('admin.domains.index')" :current="request()->routeIs('admin.domains.*')" wire:navigate>
+                    {{ __('Domains') }}
+                </flux:sidebar.item>
+            </flux:sidebar.nav> 
 
 
             <flux:spacer />

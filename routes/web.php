@@ -19,6 +19,9 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::livewire('admin/tenants', 'admin.tenants.index')->name('admin.tenants.index');
                 Route::livewire('admin/features', 'admin.features.index')->name('admin.features.index');
                 Route::livewire('admin/plans', 'admin.plans.index')->name('admin.plans.index');
+                Route::livewire('admin/domains', 'admin.domains.index')->name('admin.domains.index');
+                Route::livewire('admin/domains/create', 'admin.domains.create')->name('admin.domains.create');
+                Route::livewire('admin/domains/{domain}/edit', 'admin.domains.edit')->name('admin.domains.edit');
             });
         });
 
