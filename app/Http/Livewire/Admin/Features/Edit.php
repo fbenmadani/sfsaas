@@ -2,14 +2,17 @@
 
 namespace App\Livewire\Admin\Features;
 
-use Livewire\Component;
 use App\Models\Feature;
+use Livewire\Component;
 
 class Edit extends Component
 {
     public Feature $feature; // Inject the feature model
+
     public $name;
+
     public $description;
+
     public $slug;
 
     protected $rules = [
@@ -29,7 +32,7 @@ class Edit extends Component
     public function update()
     {
         // Ensure the slug uniqueness validation accounts for the current record being edited
-        $this->rules['slug'] = 'required|string|max:255|unique:features,slug,' . $this->feature->id;
+        $this->rules['slug'] = 'required|string|max:255|unique:features,slug,'.$this->feature->id;
         $this->validate();
 
         $this->feature->update([

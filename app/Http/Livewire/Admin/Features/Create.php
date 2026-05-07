@@ -2,13 +2,15 @@
 
 namespace App\Livewire\Admin\Features;
 
-use Livewire\Component;
-use App\Models\Feature; // Assuming Feature model exists and has appropriate fillable fields
+use App\Models\Feature;
+use Livewire\Component; // Assuming Feature model exists and has appropriate fillable fields
 
 class Create extends Component
 {
     public $name;
+
     public $description;
+
     public $slug; // Assuming slug is a relevant field
 
     protected $rules = [

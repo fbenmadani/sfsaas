@@ -15,13 +15,15 @@ class Index extends Component
 
     public string $slug = '';
 
-    public string $type = 'boolean'; // 'boolean' or 'limit'
+    public string $type = 'boolean';
 
     public ?Feature $editingFeature = null;
 
     public string $sortBy = 'name';
 
     public string $sortDirection = 'asc';
+
+    public bool $showModal = false;
 
     /**
      * Get the validation rules for the component.
@@ -72,6 +74,15 @@ class Index extends Component
     }
 
     /**
+     * Open modal for creating a new feature.
+     */
+    public function create(): void
+    {
+        $this->resetForm();
+        $this->showModal = true;
+    }
+
+    /**
      * Load the feature for editing.
      */
     public function edit(Feature $feature): void
@@ -80,6 +91,7 @@ class Index extends Component
         $this->name = $feature->name;
         $this->slug = $feature->slug;
         $this->type = $feature->type;
+        $this->showModal = true;
     }
 
     /**
@@ -101,7 +113,7 @@ class Index extends Component
      */
     public function resetForm(): void
     {
-        $this->reset(['name', 'slug', 'type', 'editingFeature']);
+        $this->reset(['name', 'slug', 'type', 'editingFeature', 'showModal']);
         $this->resetPage();
     }
 
