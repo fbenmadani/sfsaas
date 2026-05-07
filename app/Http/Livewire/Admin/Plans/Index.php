@@ -1,53 +1,169 @@
 <?php
 
-namespace App\Livewire\Admin\Plans;
+namespace App\Http\Livewire\Admin\Plans;
 
-use Livewire\Component;
+use App\Models\Feature;
 use App\Models\Plan;
-use Livewire\WithPagination; // For pagination
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use WithPagination;
 
-    public $search = '';
-    protected $queryString = ['search']; // Make search query persistent in URL
+    public string $name = '';
 
-    protected $listeners = ['planDeleted' => 'refreshPlans']; // Listen for deletion events
+    public string $slug = '';
 
-    public function render()
+    public string $description = '';
+
+    public bool $isActive = false;
+
+    public ?Plan $editingPlan = null;
+
+    public ?Plan $managingFeaturesPlan = null;
+
+    public array $selectedFeatures = [];
+
+    public string $sortBy = 'name';
+
+    public string $sortDirection = 'asc';
+
+    protected function rules(): array
     {
-        $plans = Plan::query()
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('name')
-            ->paginate(10); // Paginate results
-
-        return view('livewire.admin.plans.index', compact('plans'));
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:plans,slug,'.($this->editingPlan?->id ?? 'NULL'),
+            ],
+            'description' => ['nullable', 'string'],
+            'isActive' => ['boolean'],
+        ];
     }
 
-    public function deletePlan($planId)
+    public function sort(string $column): void
     {
-        $plan = Plan::find($planId);
-        if ($plan) {
-            $plan->delete();
-            session()->flash('message', 'Plan deleted successfully.');
-            // Refresh the component to show updated list and trigger events if needed
-            // No need to emit 'planDeleted' if we are redirecting or refreshing directly.
-            // For this index component, a simple refresh is often enough.
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            session()->flash('error', 'Plan not found.');
+            $this->sortBy = $column;
+            $this->sortDirection = 'asc';
         }
     }
 
-    // This method is called after a deletion event if we were using emit/listen for confirmation modals.
-    // Since direct delete is implemented in this component, it might not be strictly needed here.
-    public function refreshPlans()
+    public function savePlan(): void
     {
-        // This method is called by the 'planDeleted' event, but deletePlan itself updates the data.
-        // If deletePlan were in a modal component, this would be necessary.
-        // For now, it's a placeholder. The deletePlan method itself handles the update.
+        $data = $this->validate();
+
+        if ($this->editingPlan) {
+            $this->editingPlan->update([
+                'name' => $data['name'],
+                'slug' => $data['slug'],
+                'description' => $data['description'],
+                'is_active' => $data['isActive'],
+            ]);
+        } else {
+            Plan::create([
+                'name' => $data['name'],
+                'slug' => $data['slug'],
+                'description' => $data['description'],
+                'is_active' => $data['isActive'],
+            ]);
+        }
+
+        $this->resetForm();
+        $this->dispatch('plan-saved');
+    }
+
+    public function editPlan(Plan $plan): void
+    {
+        $this->editingPlan = $plan;
+        $this->name = $plan->name;
+        $this->slug = $plan->slug;
+        $this->description = $plan->description ?? '';
+        $this->isActive = $plan->is_active;
+    }
+
+    public function deletePlan(Plan $plan): void
+    {
+        $plan->delete();
+
+        if ($this->editingPlan?->is($plan)) {
+            $this->resetForm();
+        }
+
+        $this->dispatch('plan-deleted');
+    }
+
+    public function toggleActive(Plan $plan): void
+    {
+        $plan->update(['is_active' => ! $plan->is_active]);
+        $this->dispatch('plan-updated');
+    }
+
+    public function manageFeatures(Plan $plan): void
+    {
+        $this->managingFeaturesPlan = $plan->load('features');
+        $this->selectedFeatures = [];
+
+        foreach ($plan->features as $feature) {
+            $this->selectedFeatures[$feature->id] = $feature->pivot->limit_value;
+        }
+    }
+
+    public function toggleFeature(int $featureId): void
+    {
+        if (array_key_exists($featureId, $this->selectedFeatures)) {
+            unset($this->selectedFeatures[$featureId]);
+        } else {
+            $this->selectedFeatures[$featureId] = null;
+        }
+    }
+
+    public function saveFeatures(): void
+    {
+        if (! $this->managingFeaturesPlan) {
+            return;
+        }
+
+        $syncData = [];
+        foreach ($this->selectedFeatures as $featureId => $limitValue) {
+            $syncData[$featureId] = ['limit_value' => $limitValue];
+        }
+
+        $this->managingFeaturesPlan->features()->sync($syncData);
+        $this->dispatch('features-updated');
+        $this->managingFeaturesPlan = null;
+        $this->selectedFeatures = [];
+    }
+
+    public function resetForm(): void
+    {
+        $this->reset(['name', 'slug', 'description', 'isActive', 'editingPlan']);
+        $this->resetValidation();
+        $this->resetPage();
+    }
+
+    #[Computed]
+    public function allFeatures()
+    {
+        return Feature::orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function plans()
+    {
+        return Plan::withCount(['prices', 'features'])
+            ->orderBy($this->sortBy, $this->sortDirection)
+            ->paginate(10);
+    }
+
+    public function render()
+    {
+        return view('components.admin.plans.⚡index');
     }
 }

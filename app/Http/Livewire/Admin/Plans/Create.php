@@ -2,13 +2,15 @@
 
 namespace App\Livewire\Admin\Plans;
 
-use Livewire\Component;
-use App\Models\Plan; // Assuming Plan model exists and has appropriate fillable fields
+use App\Models\Plan;
+use Livewire\Component; // Assuming Plan model exists and has appropriate fillable fields
 
 class Create extends Component
 {
     public $name;
+
     public $description;
+
     public $price; // Assuming price is a relevant field
 
     protected $rules = [

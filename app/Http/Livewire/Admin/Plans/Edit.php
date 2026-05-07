@@ -2,14 +2,17 @@
 
 namespace App\Livewire\Admin\Plans;
 
-use Livewire\Component;
 use App\Models\Plan;
+use Livewire\Component;
 
 class Edit extends Component
 {
     public Plan $plan; // Inject the plan model
+
     public $name;
+
     public $description;
+
     public $price;
 
     protected $rules = [
