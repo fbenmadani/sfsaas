@@ -2,8 +2,8 @@
 
 namespace App\Http\Livewire;
 
-use Livewire\Component;
 use App\Models\Plan;
+use Livewire\Component;
 
 class PricingList extends Component
 {
