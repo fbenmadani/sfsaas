@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\Feature;
+use Tests\TestCase;
+
+uses(TestCase::class, Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 it('has the correct fillable properties', function () {
     $feature = new Feature;
