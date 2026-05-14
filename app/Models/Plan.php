@@ -11,7 +11,7 @@ class Plan extends Model
     /** @use HasFactory<PlanFactory> */
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'description', 'is_active'];
+    protected $fillable = ['name', 'slug', 'description', 'is_active', 'trial_days'];
 
     protected $casts = [
         'is_active' => 'boolean',
