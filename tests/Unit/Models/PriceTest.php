@@ -1,10 +1,12 @@
 <?php
 
 use App\Models\Price;
+use App\Models\Plan;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(TestCase::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 it('has the correct fillable properties', function () {
     $price = new Price;
