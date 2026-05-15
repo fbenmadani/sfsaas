@@ -13,6 +13,11 @@ new class extends Component
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
 
+    public $showEditModal = false;
+    public $editUserId;
+    public $name;
+    public $email;
+
     public function sort($column) {
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -25,6 +30,32 @@ new class extends Component
     {
        
             
+    }
+
+    public function edit($id) {
+        $user = User::findOrFail($id);
+        $this->editUserId = $user->id;
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->showEditModal = true;
+    }
+
+    public function cancel() {
+        $this->showEditModal = false;
+        $this->reset(['editUserId', 'name', 'email']);
+    }
+
+    public function save() {
+        $validated = $this->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,'.$this->editUserId,
+        ]);
+
+        $user = User::findOrFail($this->editUserId);
+        $user->update($validated);
+
+        $this->showEditModal = false;
+        $this->reset(['editUserId', 'name', 'email']);
     }
     #[Computed]
     public function users(){
@@ -68,5 +99,28 @@ new class extends Component
     </flux:table>    
        {{ $this->users()->links() }}
 
+     
+     <flux:modal wire:model="showEditModal">
+        <flux:heading class="mb-4">Edit User</flux:heading>
+        
+        <form wire:submit="save" class="space-y-6">
+            <flux:field>
+                <flux:label>Name</flux:label>
+                <flux:input wire:model="name" />
+                <flux:error name="name" />
+            </flux:field>
+            
+            <flux:field>
+                <flux:label>Email</flux:label>
+                <flux:input type="email" wire:model="email" />
+                <flux:error name="email" />
+            </flux:field>
+            
+            <div class="flex justify-end gap-2">
+                <flux:button wire:click="cancel">Cancel</flux:button>
+                <flux:button variant="primary" type="submit">Save</flux:button>
+            </div>
+        </form>
+     </flux:modal>  
 
 </div>

@@ -1,7 +1,7 @@
 <div>
     <div class="flex justify-between items-center mb-6">
         <flux:heading size="xl">Plans</flux:heading>
-        <flux:button wire:click="resetForm" x-on:click="$flux.modal('plan-modal').open()">Create Plan</flux:button>
+        <flux:button href="{{ route('admin.plans.create') }}" variant="primary">Create Plan</flux:button>
     </div>
 
     @if (session()->has('message'))

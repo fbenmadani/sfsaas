@@ -12,9 +12,7 @@ new class extends Component
     #[Computed]
     public function plans()
     {
-        return Plan::with(['prices' => function ($query) {
-            $query->where('is_active', true);
-            }, 'features'])->get();
+        return Plan::where('is_active', true)->with(['prices', 'features'])->get();
     }
 
 };
@@ -44,29 +42,41 @@ new class extends Component
                 $currentPrice = $plan->prices->where('billing_interval', $period)->first();
             @endphp
 
-            <div class="border rounded-lg p-6 shadow-sm bg-white flex flex-col">
-                <h3 class="text-xl font-bold">{{ $plan->name }}</h3>
-                <div class="mt-4">
-                    <span class="text-4xl font-extrabold">{{ $plan->prices->where('billing_interval', $period)->first()?->amount }}</span>
-                    <span class="text-gray-500">/{{ $period }}</span>
+            <flux:card class="flex flex-col h-full">
+                <div class="flex-grow">
+                    <flux:heading size="xl" class="mb-4">{{ $plan->name }}</flux:heading>
+                    
+                    @php
+                        $activePrice = $plan->prices->where('billing_interval', $period)->first();
+                    @endphp
+
+                    <div class="mt-4 flex items-baseline text-zinc-900 dark:text-white">
+                        @if($activePrice)
+                            <span class="text-4xl font-extrabold tracking-tight">
+                                {{ strtoupper($activePrice->currency) === 'USD' ? '$' : '' }}{{ $activePrice->amount }}
+                            </span>
+                            <span class="text-zinc-500 ml-1 text-sm font-semibold">/{{ $period }}</span>
+                        @else
+                            <span class="text-4xl font-extrabold tracking-tight">N/A</span>
+                        @endif
+                    </div>
+
+                    <flux:separator class="my-6" />
+
+                    <ul class="space-y-4">
+                        @foreach($plan->features as $feature)
+                            <li class="flex items-center text-sm text-zinc-600 dark:text-zinc-400">
+                                <flux:icon.check class="size-5 text-emerald-500 mr-3" />
+                                <span>{{ $feature->name }}: <strong class="font-semibold text-zinc-900 dark:text-white">{{ $feature->pivot->limit_value ?? 'Unlimited' }}</strong></span>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
 
-                <ul class="mt-6 space-y-4 flex-grow">
-                    @foreach($plan->features as $feature)
-                        <li class="flex items-center text-sm text-gray-600">
-                            <svg class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            {{ $feature->name }}: 
-                            <strong>{{ $feature->pivot->limit_value ?? 'Unlimited' }}</strong>
-                        </li>
-                    @endforeach
-                </ul>
-
-                <button class="mt-8 w-full py-2 bg-indigo-600 text-white rounded-md font-semibold hover:bg-indigo-700 transition">
+                <flux:button variant="primary" class="mt-8 w-full">
                     {{ $plan->trial_days > 0 ? "Start {$plan->trial_days} Day Trial" : 'Subscribe Now' }}
-                </button>
-            </div>
+                </flux:button>
+            </flux:card>
         @endforeach
     </div>
 </div>

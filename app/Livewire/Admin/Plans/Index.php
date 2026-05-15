@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Admin\Plans;
+namespace App\Livewire\Admin\Plans;
 
 use App\Models\Feature;
 use App\Models\Plan;
@@ -18,7 +18,9 @@ class Index extends Component
 
     public string $description = '';
 
-    public bool $isActive = false;
+    public bool $is_active = false;
+
+    public int $trial_days = 0;
 
     public ?Plan $editingPlan = null;
 
@@ -29,6 +31,12 @@ class Index extends Component
     public string $sortBy = 'name';
 
     public string $sortDirection = 'asc';
+
+    public string $search = '';
+
+    public bool $showingCreateModal = false;
+
+    protected $queryString = ['search'];
 
     protected function rules(): array
     {
@@ -41,7 +49,8 @@ class Index extends Component
                 'unique:plans,slug,'.($this->editingPlan?->id ?? 'NULL'),
             ],
             'description' => ['nullable', 'string'],
-            'isActive' => ['boolean'],
+            'is_active' => ['boolean'],
+            'trial_days' => ['required', 'integer', 'min:0'],
         ];
     }
 
@@ -60,23 +69,16 @@ class Index extends Component
         $data = $this->validate();
 
         if ($this->editingPlan) {
-            $this->editingPlan->update([
-                'name' => $data['name'],
-                'slug' => $data['slug'],
-                'description' => $data['description'],
-                'is_active' => $data['isActive'],
-            ]);
+            $this->editingPlan->update($data);
+            $this->editingPlan = null;
+            $this->dispatch('plan-saved');
         } else {
-            Plan::create([
-                'name' => $data['name'],
-                'slug' => $data['slug'],
-                'description' => $data['description'],
-                'is_active' => $data['isActive'],
-            ]);
+            Plan::create($data);
+            $this->showingCreateModal = false;
+            $this->dispatch('plan-saved');
         }
 
         $this->resetForm();
-        $this->dispatch('plan-saved');
     }
 
     public function editPlan(Plan $plan): void
@@ -85,7 +87,8 @@ class Index extends Component
         $this->name = $plan->name;
         $this->slug = $plan->slug;
         $this->description = $plan->description ?? '';
-        $this->isActive = $plan->is_active;
+        $this->is_active = $plan->is_active;
+        $this->trial_days = $plan->trial_days;
     }
 
     public function deletePlan(Plan $plan): void
@@ -101,7 +104,7 @@ class Index extends Component
 
     public function toggleActive(Plan $plan): void
     {
-        $plan->update(['is_active' => ! $plan->is_active]);
+        $plan->update(['is_active' => !$plan->is_active]);
         $this->dispatch('plan-updated');
     }
 
@@ -126,7 +129,7 @@ class Index extends Component
 
     public function saveFeatures(): void
     {
-        if (! $this->managingFeaturesPlan) {
+        if (!$this->managingFeaturesPlan) {
             return;
         }
 
@@ -141,9 +144,21 @@ class Index extends Component
         $this->selectedFeatures = [];
     }
 
+    public function createNewPlan(): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->name = '';
+        $this->slug = '';
+        $this->description = '';
+        $this->trial_days = 0;
+        $this->is_active = true;
+        $this->showingCreateModal = true;
+    }
+
     public function resetForm(): void
     {
-        $this->reset(['name', 'slug', 'description', 'isActive', 'editingPlan']);
+        $this->reset(['name', 'slug', 'description', 'is_active', 'editingPlan', 'trial_days']);
         $this->resetValidation();
         $this->resetPage();
     }
@@ -158,6 +173,10 @@ class Index extends Component
     public function plans()
     {
         return Plan::withCount(['prices', 'features'])
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('slug', 'like', '%'.$this->search.'%');
+            })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);
     }
