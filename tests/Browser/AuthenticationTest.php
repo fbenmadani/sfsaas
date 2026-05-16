@@ -22,6 +22,7 @@ it('can authenticate a user', function () {
         ->press('Log in')
         ->wait(1)
         ->assertPathIs('/dashboard')
+        ->screenshot(fullPage: true)
         ->assertNoJavaScriptErrors();
 });
 
