@@ -76,9 +76,15 @@ new class extends Component
         @foreach ($this->tenants as $tenant)
             <flux:table.row :table.row :key="$tenant->id">
                 <flux:table.cell>{{ $tenant->name }}</flux:table.cell>
-                <flux:table.cell>{{ $tenant->domains->first()->domain }}</flux:table.cell>
+                <flux:table.cell>{{ $tenant->domains->first()?->domain ?? 'No Domain' }}</flux:table.cell>
                 <flux:table.cell>{{ $tenant->status }}</flux:table.cell>
-                <flux:table.cell><a href="http://{{ $tenant->domains->first()->domain }}.sfsaas.test">{{ $tenant->domains->first()->domain }}</a></flux:table.cell>
+                <flux:table.cell>
+                    @if($tenant->domains->first())
+                        <a href="http://{{ $tenant->domains->first()->domain }}.sfsaas.test" target="_blank">{{ $tenant->domains->first()->domain }}</a>
+                    @else
+                        <span class="text-zinc-400 italic">No Domain</span>
+                    @endif
+                </flux:table.cell>
                 <flux:table.cell class="whitespace-nowrap">{{ $tenant->created_at->format('Y-m-d') }}</flux:table.cell>
                 <flux:table.cell>
                     <flux:button wire:click="edit({{ $tenant->id }})">Edit</flux:button>

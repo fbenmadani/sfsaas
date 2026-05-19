@@ -32,7 +32,7 @@
             @foreach ($this->domains as $domain)
                 <flux:table.row wire:key="domain-{{ $domain->id }}">
                     <flux:table.cell class="font-mono text-sm">{{ $domain->domain }}</flux:table.cell>
-                    <flux:table.cell>{{ $domain->tenant->id }}</flux:table.cell>
+                    <flux:table.cell>{{ $domain->tenant?->id ?? 'No Tenant' }}</flux:table.cell>
                     <flux:table.cell>
                         <flux:badge :variant="$domain->isSubdomain() ? 'info' : 'success'" size="sm">
                             {{ ucfirst($domain->type) }}
