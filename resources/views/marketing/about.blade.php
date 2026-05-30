@@ -6,7 +6,7 @@
             <div class="mx-auto max-w-2xl lg:mx-0">
                 <flux:heading level="1" class="text-3xl font-bold tracking-tight text-zinc-900 sm:text-6xl">We're on a Mission to Empower SMBs</flux:heading>
                 <flux:text class="mt-6 text-lg leading-8 text-zinc-600">
-                    sfSaas was born from a simple idea: that small and medium-sized businesses deserve the same powerful tools as global enterprises, with a cheerful and friendly approach.
+                    Speed Forge was born from a simple idea: that small and medium-sized businesses deserve the same powerful tools as global enterprises, with a cheerful and friendly approach.
                 </flux:text>
             </div>
             
