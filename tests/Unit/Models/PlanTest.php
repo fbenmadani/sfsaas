@@ -26,4 +26,3 @@ it('has features relationship', function () {
     expect(method_exists($plan, 'features'))->toBeTrue();
     expect($plan->features())->toBeInstanceOf(BelongsToMany::class);
 });
-

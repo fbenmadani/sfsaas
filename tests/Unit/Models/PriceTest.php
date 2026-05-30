@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\Price;
 use App\Models\Plan;
+use App\Models\Price;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 

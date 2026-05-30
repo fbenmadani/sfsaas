@@ -104,7 +104,7 @@ class Index extends Component
 
     public function toggleActive(Plan $plan): void
     {
-        $plan->update(['is_active' => !$plan->is_active]);
+        $plan->update(['is_active' => ! $plan->is_active]);
         $this->dispatch('plan-updated');
     }
 
@@ -129,7 +129,7 @@ class Index extends Component
 
     public function saveFeatures(): void
     {
-        if (!$this->managingFeaturesPlan) {
+        if (! $this->managingFeaturesPlan) {
             return;
         }
 
