@@ -40,6 +40,8 @@ jobs:
 
       - name: Install Node Dependencies
         run: npm i
+      - name: Install Playwright
+        run: npm install -D @playwright/test@latest
 
       - name: Add Flux Credentials Loaded From ENV
         run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
