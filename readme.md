@@ -18,6 +18,8 @@
 SpeedForge SaaS Kit is a production-ready starter for building multi-tenant SaaS applications. It ships with authentication, team management, subscription billing, and an admin dashboard out of the box.
 
 Built on laravel 13, Livewire 4, Mysql, and Tailwind CSS 4.The Tall Stack  gives you a solid foundation to launch faster without sacrificing code quality or flexibility.
+[SpeedForgeSaas.com](https://speedforgesaas.com?utm_source=github&utm_medium=link&utm_campaign=awareness&utm_id=github&utm_term=speedforgesaas.com)
+
 
 # Topics
 
@@ -30,7 +32,14 @@ Built on laravel 13, Livewire 4, Mysql, and Tailwind CSS 4.The Tall Stack  gives
 ## Introduction
 
 SpeedForge SaaS Starter Kit is a Laravel starter kit for building SaaS applications.
+### Raison d’Être (Why SpeedForge SaaS Kit Was born)
+- Our mission : Enable solo founders and small teams to launch production‑ready SaaS faster with reliable open‑source foundations
+- Our vision: Forge the future of SaaS development with the best open‑source tools and practices  
+and paving the safest path from MVP to production.
+- Our Values : Open, transparent, developer‑first; no lock‑in, strong docs, fair pricing.
 
+
+See the [Documentation](https://speedforgesaas.com?utm_source=github&utm_medium=link&utm_campaign=awareness&utm_id=github&utm_term=documentation) for detailed instructions for how-to-use, as well as installation and upgrade guidance.
 ## Features
 - Tall stack
 - Multi-tenancy (Stancl/Tenancy)
