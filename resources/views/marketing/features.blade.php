@@ -2,7 +2,7 @@
     <x-slot:title>Core Platform Features</x-slot:title>
 
     <!-- Page Header -->
-    <div class="bg-white py-24 sm:py-32">
+    <div class="bg-white py-12 sm:py-12">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             <div class="mx-auto max-w-2xl lg:text-center">
                 <flux:heading level="1" class="text-3xl font-bold tracking-tight text-zinc-900 sm:text-6xl">Powerful Tools, Simply Built</flux:heading>
@@ -14,8 +14,8 @@
     </div>
 
     <!-- Sales Feature Detail -->
-    <div class="bg-zinc-50 py-24 sm:py-32">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="bg-zinc-50 py-2 sm:py-12">
+        <div class="mx-auto max-w-7xl px-6 lg:px-6">
             <div class="grid grid-cols-1 items-start gap-y-16 lg:grid-cols-2 lg:gap-x-16">
                 <div>
                     <flux:badge icon="chart-bar" class="mb-6 bg-brand-accent/20 text-brand-secondary border-brand-accent/30">Sales CRM</flux:badge>
@@ -35,14 +35,14 @@
                     </ul>
                 </div>
                 <div class="rounded-2xl bg-white p-8 shadow-xl border border-zinc-100">
-                    <img src="https://fluxui.dev/img/demo/screenshot-light.png" alt="Sales Screenshot" class="rounded-lg shadow-sm border border-zinc-100">
+                    <img src="{{ asset('images/demo/screenshot-sales-crm.png') }}" alt="Sales Screenshot" class="rounded-lg shadow-sm border border-zinc-100">
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Marketing Feature Detail -->
-    <div class="bg-white py-24 sm:py-32">
+    <div class="bg-white py-12 sm:py-12">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             <div class="grid grid-cols-1 items-start gap-y-16 lg:grid-cols-2 lg:gap-x-16">
                 <div class="lg:order-last">
@@ -63,14 +63,14 @@
                     </ul>
                 </div>
                 <div class="rounded-2xl bg-zinc-50 p-8 shadow-xl border border-zinc-100">
-                    <img src="https://fluxui.dev/img/demo/screenshot-light.png" alt="Marketing Screenshot" class="rounded-lg shadow-sm border border-zinc-100">
+                    <img src="{{ asset('images/demo/screenshot-marketing-automation.png') }}" alt="Marketing Screenshot" class="rounded-lg shadow-sm border border-zinc-100">
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Customer Service Detail -->
-    <div class="bg-zinc-50 py-24 sm:py-32">
+    <div class="bg-zinc-50 py-12 sm:py-12">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             <div class="grid grid-cols-1 items-start gap-y-16 lg:grid-cols-2 lg:gap-x-16">
                 <div>
@@ -91,7 +91,7 @@
                     </ul>
                 </div>
                 <div class="rounded-2xl bg-white p-8 shadow-xl border border-zinc-100">
-                    <img src="https://fluxui.dev/img/demo/screenshot-light.png" alt="Support Screenshot" class="rounded-lg shadow-sm border border-zinc-100">
+                    <img src="{{ asset('images/demo/screenshot-customer-service.png') }}" alt="Support Screenshot" class="rounded-lg shadow-sm border border-zinc-100">
                 </div>
             </div>
         </div>
