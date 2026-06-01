@@ -2,7 +2,7 @@
     <x-slot:title>All-in-One SMB Management</x-slot:title>
     
     <div class="relative isolate overflow-hidden bg-white">
-        <div class="flex flex-rowpx-6 pt-10 pb-2 lg:px-8 lg:py-40">
+        <div class="flex flex-rowpx-6 pt-4 pb-2 lg:px-8 lg:py-10">
             <div class="basis-1/2 mx-auto max-w-2xl flex-shrink-0 lg:mx-0 lg:max-w-xl lg:pt-8">
                 <flux:badge class="mb-6 bg-brand-accent/20 text-brand-secondary border-brand-accent/30 font-semibold">New: AI-Powered Insights</flux:badge>
                 <flux:heading level="1" class="text-4xl font-bold tracking-tight text-zinc-900 sm:text-6xl">
