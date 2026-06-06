@@ -82,7 +82,7 @@ new class extends Component
       </flux:table.columns>
       <flux:table.rows>
         @foreach ($this->users as $user)
-            <flux:table.row :table.row :key="$user->id">
+            <flux:table.row :key="$user->id">
                 <flux:table.cell class="flex items-center gap-3">{{ $user->name }}</flux:table.cell>
                 <flux:table.cell>{{ $user->email }}</flux:table.cell>
                 <flux:table.cell class="whitespace-nowrap">{{ $user->created_at->format('Y-m-d') }}</flux:table.cell>

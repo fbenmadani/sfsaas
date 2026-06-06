@@ -74,7 +74,7 @@ new class extends Component
       </flux:table.columns>
       <flux:table.rows>
         @foreach ($this->tenants as $tenant)
-            <flux:table.row :table.row :key="$tenant->id">
+            <flux:table.row :key="$tenant->id">
                 <flux:table.cell>{{ $tenant->name }}</flux:table.cell>
                 <flux:table.cell>{{ $tenant->domains->first()?->domain ?? 'No Domain' }}</flux:table.cell>
                 <flux:table.cell>{{ $tenant->status }}</flux:table.cell>
