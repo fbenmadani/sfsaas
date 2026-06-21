@@ -1,56 +1,95 @@
 ## Goal
-Create a premium landing page (Home), Features, Pricing, and About pages for sfSaas using Flux UI and Tailwind CSS 4.
+Clean up the application structure, resolve PSR-4 namespace mismatches, remove duplicate legacy code, fix Livewire v4 component shadow-property bugs, remove HTML/Blade syntax typos, and standardize coding practices across the models and services.
 
 ## Assumptions
-- Using Flux UI Free components.
-- Using Tailwind CSS 4 (Vite plugin).
-- Application uses `stancl/tenancy` for domain-based routing (central routes).
-- Pages should be visually stunning, responsive, and follow SEO best practices.
+- The active namespace for Livewire components is `App\Livewire` (mapped in `config/livewire.php`).
+- The directory `app/Http/Livewire` is completely legacy and its components are duplicated or unused.
+- Central domain suffixes (like `.sfsaas.test`) should be dynamic based on configuration instead of hardcoded.
+- Existing tests cover core functionalities and can run successfully locally when the test environment is correctly configured.
 
 ## Plan
 
-### 1. Create Marketing Layout
-- **Files**: `resources/views/layouts/marketing.blade.php`
-- **Change**: Define a base layout with a premium Flux-based navbar (using `flux:navbar`, `flux:brand`, `flux:button`) and a comprehensive footer.
-- **Verify**: Create a temporary route to view the empty layout.
+### Step 1: Remove Legacy and Duplicate Livewire Directory
+- **Files**:
+  - `app/Http/Livewire/` (Directory)
+  - `composer.json`
+- **Change**:
+  - Delete `app/Http/Livewire/` directory and all its files (including `PricingList.php`, and the `Admin` subdirectories containing `Create.php`, `Edit.php`, `Index.php` duplicates).
+  - Remove `"App\\Http\\Livewire\\": "app/Http/Livewire/"` from the `autoload.psr-4` section in `composer.json`.
+  - Run `composer dump-autoload` to update the autoloader.
+- **Verify**:
+  - Run `composer lint:check` to ensure composer and pint config checks pass.
 
-### 2. Define Marketing Routes
-- **Files**: `routes/web.php`
-- **Change**: Register routes for `/` (home), `/features`, `/pricing`, and `/about` within the central domain group.
-- **Verify**: Run `php artisan route:list` to ensure routes are correctly mapped to views.
+### Step 2: Remove Duplicate and Unused Views
+- **Files**:
+  - [DELETE] [index.blade.php](file:///g:/laragon/www/sfsaas/resources/views/livewire/admin/plans/index.blade.php)
+- **Change**:
+  - Delete `resources/views/livewire/admin/plans/index.blade.php` since the plan index component uses `resources/views/components/admin/plans/⚡index.blade.php` exclusively.
+- **Verify**:
+  - Run the test suite or search for references to `livewire.admin.plans.index` to ensure it is not referenced anywhere.
 
-### 3. Implement Home Page
-- **Files**: `resources/views/marketing/home.blade.php`
-- **Change**: Implement a high-impact Hero section with a generated illustration, a summary of Sales/Marketing/Service features, and a clear CTA.
-- **Verify**: Navigate to root URL and check for "wow" factor and responsiveness.
+### Step 3: Remove Typo Attributes from Flux Table Rows
+- **Files**:
+  - [MODIFY] [⚡index.blade.php](file:///g:/laragon/www/sfsaas/resources/views/components/admin/tenants/⚡index.blade.php)
+  - [MODIFY] [⚡index.blade.php](file:///g:/laragon/www/sfsaas/resources/views/components/admin/users/⚡index.blade.php)
+- **Change**:
+  - In `components/admin/tenants/⚡index.blade.php`, remove `:table.row` from `<flux:table.row :table.row :key="$tenant->id">`.
+  - In `components/admin/users/⚡index.blade.php`, remove `:table.row` from `<flux:table.row :table.row :key="$user->id">`.
+- **Verify**:
+  - Ensure standard rendering continues to function without console/view errors.
 
-### 4. Implement Features Page
-- **Files**: `resources/views/marketing/features.blade.php`
-- **Change**: Detailed breakdown of the three core modules (Sales, Marketing, Customer Service) using Flux cards and icons.
-- **Verify**: Navigate to `/features` and ensure clear value proposition.
+### Step 4: Fix Shadowing Property Bug in Tenant Show Component
+- **Files**:
+  - [MODIFY] [⚡show.blade.php](file:///g:/laragon/www/sfsaas/resources/views/components/admin/tenants/⚡show.blade.php)
+- **Change**:
+  - Remove public properties `public $subscription;`, `public $subscription_plan;`, and `public $users;` from the Livewire component class definition. This resolves the Livewire v4 bug where public properties shadow `#[Computed]` methods (returning `null`).
+- **Verify**:
+  - Verify that the tenant show details page renders the correct user counts, subscription names, and other metrics instead of empty/null values.
 
-### 5. Implement Pricing Page
-- **Files**: `resources/views/marketing/pricing.blade.php`
-- **Change**: Create a multi-tier pricing table (e.g., Starter, Pro, Enterprise) using Flux's clean aesthetic and interactive buttons.
-- **Verify**: Navigate to `/pricing` and check layout on mobile.
+### Step 5: Consolidate Plan Creation Flow
+- **Files**:
+  - [MODIFY] [⚡index.blade.php](file:///g:/laragon/www/sfsaas/resources/views/components/admin/plans/⚡index.blade.php)
+  - [DELETE] [Create.php](file:///g:/laragon/www/sfsaas/app/Livewire/Admin/Plans/Create.php)
+  - [DELETE] [⚡create.blade.php](file:///g:/laragon/www/sfsaas/resources/views/components/admin/plans/⚡create.blade.php)
+  - [MODIFY] [web.php](file:///g:/laragon/www/sfsaas/routes/web.php)
+- **Change**:
+  - In `resources/views/components/admin/plans/⚡index.blade.php`, change the "Create Plan" button to open the `plan-modal` directly (`wire:click="createNewPlan" x-on:click="$flux.modal('plan-modal').open()"`).
+  - Delete `app/Livewire/Admin/Plans/Create.php` and `resources/views/components/admin/plans/⚡create.blade.php`.
+  - Remove the `/admin/plans/create` route from `routes/web.php`.
+- **Verify**:
+  - Verify that plan creation now happens successfully inside the modal from the plans list page.
 
-### 6. Implement About Page
-- **Files**: `resources/views/marketing/about.blade.php`
-- **Change**: Design an "About Us" page detailing the mission to help SMBs, following the same premium design system.
-- **Verify**: Navigate to `/about`.
+### Step 6: Fix Hardcoded Domain Suffixes
+- **Files**:
+  - [MODIFY] [sign-up.blade.php](file:///g:/laragon/www/sfsaas/resources/views/pages/account/sign-up.blade.php)
+  - [MODIFY] [⚡index.blade.php](file:///g:/laragon/www/sfsaas/resources/views/components/admin/tenants/⚡index.blade.php)
+  - [MODIFY] [⚡show.blade.php](file:///g:/laragon/views/components/admin/tenants/⚡show.blade.php)
+- **Change**:
+  - Define a helper or dynamic variable in the component/view to resolve the tenant domain suffix from config instead of hardcoding `.sfsaas.test`.
+- **Verify**:
+  - Inspect the sign-up page and the tenant list/show URLs to confirm the host suffix is dynamic.
 
-### 7. Automated Testing & Verification
-- **Files**: `tests/Feature/MarketingPagesTest.php`
-- **Change**: Write Pest tests to assert that all four pages return a 200 OK status.
-- **Verify**: Run `php artisan test --filter MarketingPagesTest`.
+### Step 7: Apply PHP/Laravel Best Practices
+- **Files**:
+  - [MODIFY] [User.php](file:///g:/laragon/www/sfsaas/app/Models/User.php)
+  - [MODIFY] [Tenant.php](file:///g:/laragon/www/sfsaas/app/Models/Tenant.php)
+  - [MODIFY] [Subscription.php](file:///g:/laragon/www/sfsaas/app/Models/Subscription.php)
+  - [MODIFY] [Price.php](file:///g:/laragon/www/sfsaas/app/Models/Price.php)
+  - [MODIFY] [Plan.php](file:///g:/laragon/www/sfsaas/app/Models/Plan.php)
+  - [MODIFY] [Domain.php](file:///g:/laragon/www/sfsaas/app/Models/Domain.php)
+  - [MODIFY] [BillingService.php](file:///g:/laragon/www/sfsaas/app/Service/BillingService.php)
+- **Change**:
+  - Add explicit return type hints to all relationship methods on the models.
+  - In `BillingService.php`, remove the empty constructor and add type hint `: array` for `getMetrics()`.
+  - Run `vendor/bin/pint --dirty --format agent` to format code.
+- **Verify**:
+  - Run the test suite to ensure all relationships and billing metrics continue to behave correctly.
 
 ## Risks & mitigations
-- **Risk**: Flux UI Pro components might be accidentally used.
-- **Mitigation**: Strictly use components listed in the Free edition documentation.
-- **Risk**: Tailwind 4 breaking changes or config issues.
-- **Mitigation**: Verify compilation with `npm run build` early.
+- **Risk**: Deleting `app/Http/Livewire` might cause errors if any component refers to it.
+  - *Mitigation*: We searched for all references to `App\Http\Livewire` namespace and found none in the active code.
+- **Risk**: Modal-based creation for plans may hit validation or styling issues.
+  - *Mitigation*: We will verify the validation errors map correctly within the modal layout.
 
 ## Rollback plan
-- Revert `routes/web.php` to its previous state.
-- Delete the created layout and marketing view directory.
-- `git checkout routes/web.php` and `rm -rf resources/views/marketing resources/views/layouts/marketing.blade.php`.
+- In case of issues, run `git checkout -- .` and restore deleted files using Git (`git checkout HEAD -- <file_path>`).

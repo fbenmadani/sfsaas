@@ -136,7 +136,7 @@ new #[Layout('components.layouts.marketing')] class extends Component
             <flux:input.group>
    
     <flux:input name="subdomain"  wire:model="subdomain" required placeholder="yourstore" />
-    <flux:input.group.suffix class="bg-zinc-100 dark:bg-zinc-800">.sfsaas.test</flux:input.group.suffix>
+    <flux:input.group.suffix class="bg-zinc-100 dark:bg-zinc-800">.{{ $appUrl }}</flux:input.group.suffix>
 </flux:input.group>
             <!-- Email Address -->
             <flux:input

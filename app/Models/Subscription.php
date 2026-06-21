@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Subscription extends Model
 {
@@ -13,7 +14,7 @@ class Subscription extends Model
 
     protected $fillable = ['tenant_id', 'price_id', 'status', 'trial_ends_at', 'ends_at'];
 
-    public function price()
+    public function price(): BelongsTo
     {
         return $this->belongsTo(Price::class);
     }

@@ -7,15 +7,7 @@ use App\Models\Tenant;
 
 class BillingService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    public function getMetrics()
+    public function getMetrics(): array
     {
         $activeSubscriptions = Subscription::active()->with('price')->get();
 

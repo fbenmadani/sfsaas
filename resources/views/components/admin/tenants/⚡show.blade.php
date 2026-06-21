@@ -9,9 +9,7 @@ use Livewire\Attributes\Computed;
 new class extends Component
 {
     public Tenant $tenant;
-    public $subscription;
-    public $subscription_plan;
-    public $users; 
+
     #[Computed]
     public function users(){
         return $this->tenant->users;
@@ -40,6 +38,7 @@ new class extends Component
 ?>
 
 <div>
+    @php $host = parse_url(config('app.url'), PHP_URL_HOST); @endphp
     <div class="flex justify-between items-center mb-6">
         <div>
             <flux:heading size="xl" level="1">{{ $tenant->name ?? 'Tenant #' . $tenant->id }}</flux:heading>
@@ -57,7 +56,7 @@ new class extends Component
                     <span class="text-zinc-500">Domain</span>
                     <span class="font-medium text-zinc-900 dark:text-white">
                         @if($tenant->domains && $tenant->domains->first())
-                            <a href="http://{{ $tenant->domains->first()->domain }}.sfsaas.test" target="_blank" class="text-blue-600 hover:underline">
+                            <a href="http://{{ $tenant->domains->first()->domain }}.{{ $host }}" target="_blank" class="text-blue-600 hover:underline">
                                 {{ $tenant->domains->first()->domain }}
                             </a>
                         @else

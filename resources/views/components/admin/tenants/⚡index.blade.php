@@ -40,6 +40,7 @@ new class extends Component
 ?>
 
 <div>
+    @php $host = parse_url(config('app.url'), PHP_URL_HOST); @endphp
     {{-- List all tenants --}}
     <div class="flex justify-between items-center mb-6">
         <flux:heading size="xl">Tenants</flux:heading>
@@ -80,7 +81,7 @@ new class extends Component
                 <flux:table.cell>{{ $tenant->status }}</flux:table.cell>
                 <flux:table.cell>
                     @if($tenant->domains->first())
-                        <a href="http://{{ $tenant->domains->first()->domain }}.sfsaas.test" target="_blank">{{ $tenant->domains->first()->domain }}</a>
+                        <a href="http://{{ $tenant->domains->first()->domain }}.{{ $host }}" target="_blank">{{ $tenant->domains->first()->domain }}</a>
                     @else
                         <span class="text-zinc-400 italic">No Domain</span>
                     @endif
