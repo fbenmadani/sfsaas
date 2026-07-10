@@ -42,6 +42,9 @@
             </flux:sidebar.nav>        
 
             <flux:sidebar.nav>
+
+                 <livewire:language />
+
                 <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
                     {{ __('Repository') }}
                 </flux:sidebar.item>
@@ -84,6 +87,7 @@
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />
+                   
 
                     <flux:menu.radio.group>
                         <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
